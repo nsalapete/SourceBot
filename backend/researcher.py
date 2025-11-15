@@ -7,11 +7,11 @@ import os
 
 def analyze_suppliers(goal, suppliers_data, api_key, model="claude-sonnet-4-5-20250929"):
     """
-    Analyzes supplier data based on the goal
+    Analyzes retail inventory data based on the goal
     
     Args:
         goal (str): The original goal
-        suppliers_data (list): List of supplier objects from JSON
+        suppliers_data (list): List of product/inventory records from CSV
         api_key (str): Anthropic API key
         model (str): Claude model to use
     
@@ -20,37 +20,40 @@ def analyze_suppliers(goal, suppliers_data, api_key, model="claude-sonnet-4-5-20
     """
     client = anthropic.Anthropic(api_key=api_key)
     
-    # Convert suppliers data to a readable format
-    suppliers_summary = json.dumps(suppliers_data[:20], indent=2)  # Send first 20 for context
+    # Convert inventory data to a readable format
+    suppliers_summary = json.dumps(suppliers_data[:30], indent=2)  # Send first 30 for context
     
-    prompt = f"""You are a data analyst specializing in supplier relationship management.
+    prompt = f"""You are a retail inventory analyst specializing in product and supplier analysis.
 
 Goal: {goal}
 
-Here is a sample of supplier data from our CRM:
+Here is a sample of retail inventory data:
 {suppliers_summary}
 
-The full dataset contains {len(suppliers_data)} suppliers.
+The full dataset contains {len(suppliers_data)} product records.
 
-Analyze this data in the context of the goal. Provide:
-1. Key findings and insights
-2. Specific suppliers or categories that are relevant
-3. Statistics and patterns you notice (ratings, categories, active status)
-4. Recommendations based on the data
+CSV Columns: Product, Packsize, Headoffice ID, Barcode, OrderList (supplier), Case Size, Trade Price, RRP, Dept Fullname, Group Fullname, Branch Name, Branch Stock Level
+
+Analyze this retail inventory data in the context of the goal. Provide:
+1. Key findings and insights about products, suppliers (OrderList), pricing, stock levels
+2. Specific products, suppliers, or departments that are relevant to the goal
+3. Statistics and patterns (pricing trends, stock levels, product categories, supplier distribution)
+4. Actionable recommendations based on the inventory data
 
 Return your response as a JSON object with these fields:
 {{
   "summary": "Brief summary of findings",
   "key_findings": ["finding 1", "finding 2", ...],
   "relevant_suppliers": [
-    {{"id": "SUP-XXX", "name": "Company Name", "reason": "why relevant"}},
+    {{"supplier": "Supplier Name", "product": "Product Name", "reason": "why relevant"}},
     ...
   ],
   "statistics": {{
-    "total_suppliers": number,
-    "average_rating": number,
-    "by_category": {{}},
-    "active_count": number
+    "total_products": number,
+    "unique_suppliers": number,
+    "departments": {{}},
+    "avg_trade_price": number,
+    "avg_rrp": number
   }},
   "recommendations": ["recommendation 1", "recommendation 2", ...]
 }}
@@ -100,17 +103,26 @@ Only return the JSON object, no other text."""
 
 def load_suppliers_from_file(filepath):
     """
-    Load suppliers from JSON file (fake CRM connection)
+    Load inventory data from CSV file (retail inventory snapshot)
     
     Args:
-        filepath (str): Path to suppliers JSON file
+        filepath (str): Path to retail inventory CSV file
     
     Returns:
-        list: List of supplier objects
+        list: List of product/supplier records
     """
     try:
-        with open(filepath, 'r') as f:
-            suppliers = json.load(f)
+        import csv
+        suppliers = []
+        
+        with open(filepath, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            # Load first 500 rows for performance
+            for i, row in enumerate(reader):
+                if i >= 500:
+                    break
+                suppliers.append(row)
+        
         return {
             "success": True,
             "suppliers": suppliers

@@ -36,7 +36,7 @@ workflow_state = {
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
 ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 CLAUDE_MODEL = os.getenv('CLAUDE_MODEL', 'claude-sonnet-4-5-20250929')
-SUPPLIERS_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'suppliers.json')
+SUPPLIERS_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'Retail', 'retail_inventory_snapshot_30_10_25_cleaned.csv')
 
 
 @app.route('/', methods=['GET'])
