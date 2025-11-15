@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Notification Dashboard - SourceBot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .status-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .status-card h3 {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .status-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .status-card.pending .value {
+            color: #ff6b6b;
+        }
+
+        .status-card.voice .value {
+            color: #51cf66;
+        }
+
+        .notifications-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .notification-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .notification-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .notification-card.critical {
+            border-left-color: #ff6b6b;
+            background: #fff5f5;
+        }
+
+        .notification-card.high {
+            border-left-color: #ff922b;
+        }
+
+        .notification-card.medium {
+            border-left-color: #ffd43b;
+        }
+
+        .notification-card.low {
+            border-left-color: #51cf66;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .notification-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            flex: 1;
+        }
+
+        .notification-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-critical { background: #ff6b6b; color: white; }
+        .badge-high { background: #ff922b; color: white; }
+        .badge-medium { background: #ffd43b; color: #333; }
+        .badge-low { background: #51cf66; color: white; }
+
+        .notification-message {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .notification-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        .notification-data {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .notification-data h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .data-item:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .data-value {
+            color: #333;
+            font-weight: bold;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-play {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-approve {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-reject {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-download {
+            background: #667eea;
+            color: white;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #51cf66;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.disconnected {
+            background: #ff6b6b;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.7;
+                transform: scale(1.05);
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: white;
+        }
+
+        .empty-state h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .voice-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: #51cf66;
+            color: white;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .list-items {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .list-items li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .list-items li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Connecting...</span>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Manager Notification Dashboard</h1>
+            <p>Real-time voice notifications from SourceBot agents</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-card">
+                <h3>Total Notifications</h3>
+                <div class="value" id="totalCount">0</div>
+            </div>
+            <div class="status-card pending">
+                <h3>Pending Approvals</h3>
+                <div class="value" id="pendingCount">0</div>
+            </div>
+            <div class="status-card voice">
+                <h3>Voice Notifications</h3>
+                <div class="value" id="voiceCount">0</div>
+            </div>
+            <div class="status-card">
+                <h3>Active Listeners</h3>
+                <div class="value" id="listenersCount">0</div>
+            </div>
+        </div>
+
+        <div class="notifications-container" id="notificationsContainer">
+            <div class="loading">Loading notifications...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5001';
+        let eventSource = null;
+        let notifications = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNotifications();
+            connectStream();
+            updateStatus();
+            setInterval(updateStatus, 10000); // Update status every 10 seconds
+        });
+
+        // Connect to notification stream
+        function connectStream() {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            eventSource = new EventSource(`${API_URL}/api/notifications/stream`);
+
+            eventSource.onopen = () => {
+                statusDot.classList.remove('disconnected');
+                statusText.textContent = 'Connected';
+                console.log('✓ Connected to notification stream');
+            };
+
+            eventSource.onerror = () => {
+                statusDot.classList.add('disconnected');
+                statusText.textContent = 'Disconnected';
+                console.log('✗ Stream connection error');
+            };
+
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleStreamEvent(data);
+            };
+        }
+
+        // Handle stream events
+        function handleStreamEvent(data) {
+            console.log('Stream event:', data.type, data);
+
+            if (data.type === 'connected') {
+                console.log('Stream connected:', data.message);
+            } else if (data.type === 'keepalive') {
+                // Just a heartbeat
+            } else if (data.type === 'voice_ready') {
+                console.log('Voice ready for:', data.notification_id);
+                loadNotifications(); // Refresh to show voice button
+                
+                // Auto-play voice when ready
+                setTimeout(() => {
+                    autoPlayVoice(data.notification_id);
+                }, 500);
+            } else if (data.type === 'approval_response') {
+                console.log('Approval response:', data.approved);
+                loadNotifications(); // Refresh to update status
+            } else if (data.type && !['connected', 'keepalive', 'voice_ready', 'approval_response'].includes(data.type)) {
+                // New notification
+                console.log('New notification:', data.title);
+                loadNotifications(); // Refresh to show new notification
+                
+                // Check if voice will be generated (high/critical priority)
+                if (['high', 'critical'].includes(data.priority)) {
+                    console.log('Voice notification expected, will auto-play when ready');
+                }
+            }
+        }
+        
+        // Auto-play voice notification
+        function autoPlayVoice(notificationId) {
+            console.log('Attempting to auto-play voice for:', notificationId);
+            
+            // Try to get the audio element
+            const audio = document.getElementById(`audio-${notificationId}`);
+            if (audio) {
+                console.log('Audio element found, playing...');
+                
+                // Play with promise handling for browser autoplay policies
+                const playPromise = audio.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            console.log('✓ Voice auto-played successfully');
+                        })
+                        .catch(error => {
+                            console.log('⚠ Auto-play blocked by browser:', error);
+                            console.log('User interaction required. Click play button manually.');
+                            // Show visual indicator
+                            const playButton = document.querySelector(`button[onclick="playVoice('${notificationId}')"]`);
+                            if (playButton) {
+                                playButton.style.animation = 'pulse 1s infinite';
+                                playButton.textContent = '🔊 Click to Play Voice';
+                            }
+                        });
+                }
+            } else {
+                console.log('Audio element not found yet, retrying...');
+                // Retry after a short delay
+                setTimeout(() => autoPlayVoice(notificationId), 1000);
+            }
+        }
+
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const response = await fetch(`${API_URL}/api/notifications/history?limit=20`);
+                const data = await response.json();
+                notifications = data.history;
+                renderNotifications();
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                document.getElementById('notificationsContainer').innerHTML = `
+                    <div class="empty-state">
+                        <h2>⚠️ Connection Error</h2>
+                        <p>Cannot connect to notification service at ${API_URL}</p>
+                        <p>Make sure the service is running: python backend/notification_system.py</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Update status counts
+        async function updateStatus() {
+            try {
+                const response = await fetch(`${API_URL}/api/notifications/state`);
+                const state = await response.json();
+                
+                document.getElementById('totalCount').textContent = state.total_notifications;
+                document.getElementById('pendingCount').textContent = state.pending_count;
+                document.getElementById('listenersCount').textContent = state.active_listeners;
+                
+                // Count voice notifications
+                const voiceCount = notifications.filter(n => n.has_voice).length;
+                document.getElementById('voiceCount').textContent = voiceCount;
+            } catch (error) {
+                console.error('Error updating status:', error);
+            }
+        }
+
+        // Render notifications
+        function renderNotifications() {
+            const container = document.getElementById('notificationsContainer');
+            
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h2>📭 No Notifications</h2>
+                        <p>You're all caught up! No notifications at this time.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifications.map(notif => renderNotification(notif)).join('');
+        }
+
+        // Render single notification
+        function renderNotification(notif) {
+            const priorityClass = notif.priority || 'medium';
+            const badgeClass = `badge-${priorityClass}`;
+            const voiceIndicator = notif.has_voice ? '<span class="voice-indicator">🔊 Voice Available</span>' : '';
+            
+            // Format timestamp
+            const timestamp = new Date(notif.created_at).toLocaleString();
+            
+            // Render business data if available
+            let dataHtml = '';
+            if (notif.data) {
+                dataHtml = renderBusinessData(notif.data);
+            }
+
+            // Render approval section
+            let approvalHtml = '';
+            if (notif.requires_approval) {
+                if (notif.status === 'pending') {
+                    approvalHtml = `
+                        <div class="notification-actions">
+                            <button class="btn btn-approve" onclick="approveNotification('${notif.id}', true)">
+                                ✓ Approve
+                            </button>
+                            <button class="btn btn-reject" onclick="approveNotification('${notif.id}', false)">
+                                ✗ Reject
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    const status = notif.status === 'approved' ? '✓ Approved' : '✗ Rejected';
+                    const statusColor = notif.status === 'approved' ? '#51cf66' : '#ff6b6b';
+                    approvalHtml = `
+                        <div style="padding: 10px; background: ${statusColor}20; border-radius: 5px; color: ${statusColor}; font-weight: bold;">
+                            ${status} by ${notif.approval?.manager_id || 'manager'}
+                        </div>
+                    `;
+                }
+            }
+
+            // Voice player
+            let voiceHtml = '';
+            if (notif.has_voice) {
+                voiceHtml = `
+                    <div class="notification-actions">
+                        <button class="btn btn-play" onclick="playVoice('${notif.id}')">
+                            🔊 Play Voice Notification
+                        </button>
+                        <button class="btn btn-download" onclick="downloadVoice('${notif.id}')">
+                            ⬇️ Download
+                        </button>
+                    </div>
+                    <audio id="audio-${notif.id}" data-id="${notif.id}" controls preload="auto">
+                        <source src="${API_URL}${notif.voice_url}" type="audio/mpeg">
+                        Your browser does not support audio playback.
+                    </audio>
+                `;
+            }
+
+            return `
+                <div class="notification-card ${priorityClass}">
+                    <div class="notification-header">
+                        <div class="notification-title">${notif.title}</div>
+                        <div>
+                            ${voiceIndicator}
+                            <span class="notification-badge ${badgeClass}">${priorityClass}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-message">${notif.message}</div>
+                    
+                    <div class="notification-meta">
+                        <span>🤖 ${notif.agent_id || 'System'}</span>
+                        <span>🕒 ${timestamp}</span>
+                        <span>📋 ${notif.type}</span>
+                    </div>
+                    
+                    ${dataHtml}
+                    ${voiceHtml}
+                    ${approvalHtml}
+                </div>
+            `;
+        }
+
+        // Render business data
+        function renderBusinessData(data) {
+            let html = '';
+
+            if (data.inventory) {
+                html += `
+                    <div class="notification-data">
+                        <h4>📦 Inventory Status</h4>
+                        ${data.inventory.current_stock ? `<div class="data-item"><span class="data-label">Current Stock</span><span class="data-value">${data.inventory.current_stock} units</span></div>` : ''}
+                        ${data.inventory.low_stock_items && data.inventory.low_stock_items.length > 0 ? `
+                            <div class="data-item">
+                                <span class="data-label">Low Stock Items</span>
+                                <span class="data-value">${data.inventory.low_stock_items.length} items</span>
+                            </div>
+                            <ul class="list-items">
+                                ${data.inventory.low_stock_items.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                        ${data.inventory.reorder_needed ? '<div class="data-item"><span class="data-label">Action Required</span><span class="data-value" style="color: #ff6b6b;">Reorder Needed</span></div>' : ''}
+                    </div>
+                `;
+            }
+
+            if (data.cashflow) {
+                html += `
+                    <div class="notification-data">
+                        <h4>💰 Cashflow Summary</h4>
+                        ${data.cashflow.balance ? `<div class="data-item"><span class="data-label">Balance</span><span class="data-value">$${data.cashflow.balance.toLocaleString()}</span></div>` : ''}
+                        ${data.cashflow.incoming ? `<div class="data-item"><span class="data-label">Incoming</span><span class="data-value" style="color: #51cf66;">+$${data.cashflow.incoming.toLocaleString()}</span></div>` : ''}
+                        ${data.cashflow.outgoing ? `<div class="data-item"><span class="data-label">Outgoing</span><span class="data-value" style="color: #ff6b6b;">-$${data.cashflow.outgoing.toLocaleString()}</span></div>` : ''}
+                        ${data.cashflow.status ? `<div class="data-item"><span class="data-label">Status</span><span class="data-value">${data.cashflow.status.toUpperCase()}</span></div>` : ''}
+                    </div>
+                `;
+            }
+
+            if (data.purchase_recommendation) {
+                const pr = data.purchase_recommendation;
+                html += `
+                    <div class="notification-data">
+                        <h4>🛒 Purchase Recommendation</h4>
+                        ${pr.items && pr.items.length > 0 ? `
+                            <div class="data-item">
+                                <span class="data-label">Items to Purchase</span>
+                                <span class="data-value">${pr.items.length} items</span>
+                            </div>
+                            <ul class="list-items">
+                                ${pr.items.map(item => `<li>${item.name} - Qty: ${item.quantity}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                        ${pr.total_cost ? `<div class="data-item"><span class="data-label">Total Cost</span><span class="data-value">$${pr.total_cost.toLocaleString()}</span></div>` : ''}
+                        ${pr.urgency ? `<div class="data-item"><span class="data-label">Urgency</span><span class="data-value" style="color: ${pr.urgency === 'critical' ? '#ff6b6b' : '#ff922b'};">${pr.urgency.toUpperCase()}</span></div>` : ''}
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+
+        // Play voice notification
+        function playVoice(notificationId) {
+            console.log('Playing voice for:', notificationId);
+            const audio = document.getElementById(`audio-${notificationId}`);
+            if (audio) {
+                // Reload audio source to ensure it's fresh
+                audio.load();
+                
+                const playPromise = audio.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            console.log('✓ Audio playing');
+                        })
+                        .catch(error => {
+                            console.error('Error playing audio:', error);
+                            alert('Error playing voice notification. Please check console for details.');
+                        });
+                }
+            } else {
+                console.error('Audio element not found for:', notificationId);
+            }
+        }
+
+        // Download voice notification
+        function downloadVoice(notificationId) {
+            window.open(`${API_URL}/api/notifications/${notificationId}/voice`, '_blank');
+        }
+
+        // Approve/reject notification
+        async function approveNotification(notificationId, approved) {
+            try {
+                const response = await fetch(`${API_URL}/api/notifications/${notificationId}/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ approved, manager_id: 'dashboard_manager' })
+                });
+
+                if (response.ok) {
+                    console.log(`✓ Notification ${approved ? 'approved' : 'rejected'}`);
+                    loadNotifications(); // Refresh
+                } else {
+                    console.error('Failed to approve notification');
+                }
+            } catch (error) {
+                console.error('Error approving notification:', error);
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+    </script>
+</body>
+</html>

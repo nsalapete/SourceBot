@@ -1,0 +1,42 @@
+# Ignore files that may contain API keys or other secrets
+.env
+*.env
+.env.* 
+.env.local
+.env.*.local
+local.properties
+
+# Node modules
+node_modules/
+package-lock.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Common secret/config files
+credentials.yml
+secrets.yml
+secrets/*.yml
+*.secret
+
+# Cloud and service account credentials
+.aws/credentials
+.gcloud/
+google-credentials.json
+service-account.json
+client_secret*.json
+credentials.json
+
+# Private key / certificate files
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+
+# Editor/workspace settings that can contain tokens
+.vscode/
+.idea/
