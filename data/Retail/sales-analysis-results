@@ -1,0 +1,227 @@
+================================================================================
+SALES DATA ANALYSIS RESULTS
+================================================================================
+
+================================================================================
+PACKSIZE VALUE COUNTS
+================================================================================
+Packsize
+1           74549
+24          59201
+0           50325
+200ml       48175
+30          39296
+            ...  
+EM61            1
+537662          1
+TT1317-6        1
+531622          1
+171107          1
+Name: count, Length: 1727, dtype: int64
+
+Total unique Packsizes: 1727
+
+================================================================================
+TOP 50 SELLING PRODUCTS (by quantity sold)
+================================================================================
+Product
+Nurofen Rapid Relief 400mg Maximum Strength 20s        12169
+Panadol Extra Soluble 24s                              12021
+Solpadeine Soluble 24s                                 10865
+Perrigo Paracetamol 500mg Tablet 24s                   10434
+Cetrine Allergy Tablets 30s                            10120
+Brupro Max FC Tablets 400mg 24s                         8051
+Paralief Paracetamol Tablets 500mg 24s                  8025
+Exputex Cough Syrup 300ml                               7292
+Nurofen Plus 24s                                        6924
+Rowalief Film Coated Tablets 500mg 24s                  6832
+Sudafed Non-Drowsy Decon Tab 12s                        6795
+Mepore Adhesive Surgical Dressings 6 x 7cm              6429
+Benylin Day & Night Tablets 16s                         6273
+Symprove Mango & Passionfruit 4 Week Pack               5809
+Solpa Extra Soluble Tablets with Caffeine 24s           5501
+Easofen Max Strength 400mg                              5335
+Kleenex Balsam Hankies 9S                               5252
+Flowflex SARS-CoV-2 Antigen Tests 5 Pack                5165
+Flowflex SARS-CoV-2 Antigen Test Single                 5091
+Hylo-Forte Eye Drops 7.5ml                              4872
+Lempsip Max Lemon 10s                                   4846
+Telfast Tablets 120mg 30s                               4779
+Mepore Dressing 9X10Cm 50                               4776
+Sudafed Nasal Spray 15ml                                4775
+Imodium Instants 12s                                    4636
+Calpol Suspension (Infant) Sugar Free 140ml Syringe     4630
+Revive Active Zest 30s                                  4449
+Difflam Spray                                           4245
+Nytol One A Day 50mg Tablets 20s                        4197
+Strepsils Honey & Lemon Lozenge 36s                     3770
+Solpadeine Capsules 24s                                 3745
+Calpol 6+ Sugar Free 140ml                              3708
+Sinutab 15s                                             3703
+Nurofen Cold & Flu 24s                                  3638
+Crystal Clear Reading Glasses Bs                        3497
+Cortopin Cream                                          3495
+Nurofen Plus 12s                                        3366
+Benylin Dry Non-Drowsy 125ml                            3363
+Panadol Extra 24s                                       3226
+Piriton 30s                                             3221
+Meporex 9x15cmDressing                                  3151
+Medporex Adhesive Surgical Dressing 6 x 7cm             3150
+Daktarin Cream 30g                                      3140
+Jakemans Honey & Lemon 73g                              3138
+Panadol Base Tablets 24s                                3103
+PrizMag Magnesium Bisglycinate 90 Capsules              3058
+Acic 5% Cream 2g                                        3051
+Jakemans Throat & Chest 73g                             3027
+Medporex Waterproof Surgical Dressing 5 x 7cm           3007
+Boson SARS-CoV-2 Antigen Test Single                    2782
+Name: Qty Sold, dtype: int64
+
+================================================================================
+BRANCH NAME - SALES COUNTS & QUANTITY SOLD
+================================================================================
+                  Qty Sold  Trade Price  Transaction Count
+Branch Name                                               
+Baggot St           317235   2408914.55             292807
+Barrow St           242897   1395327.64             222894
+Churchtown          189338   1404799.19             173865
+Mater Hospital      150420    699242.21             140261
+Kinvara             136529    748505.22             125576
+Ranelagh Village    108875    617656.84              99610
+Castletymon          97182    474254.13              87077
+Bhagwans             76281    363066.73              68082
+Glenview             72658    362775.79              66072
+Sandford Rd          53132    288781.57              47807
+
+Total unique Branches: 10
+
+================================================================================
+DEPT FULLNAME - SALES ANALYSIS
+================================================================================
+                                       Qty Sold  Trade Price  Transaction Count
+Dept Fullname                                                                  
+OTC : Analgesics                         160130    801115.98             158063
+Vitamins                                 129483   1437788.90             120542
+OTC : First Aid                          100736    187507.06              57586
+OTC                                       80268    352393.71              77823
+OTC : GIT                                 73552    378488.68              70623
+...                                         ...          ...                ...
+HomeCare : Compression Stockings              5        25.62                  3
+Prescriptions : DPS Rx                        3         0.00                  3
+SkinLab : Skinlab                             2         0.00                  1
+Consultation Services : Blood Glucose         1         0.00                  1
+Dermo Skincare : Skin Lab Treatment           1        10.00                  1
+
+[106 rows x 3 columns]
+
+Total unique Departments: 106
+
+================================================================================
+GROUP FULLNAME - SALES ANALYSIS
+================================================================================
+                          Qty Sold  Trade Price  Transaction Count
+Group Fullname                                                    
+Analgesics                  168977    795252.39             166599
+First aid                   107850    227469.66              64469
+Cough/Cold/Flu               94134    366643.63              91047
+GIT                          86114    449541.65              82405
+Eye/Ear/Nose/Throat          60957    298452.50              57877
+...                            ...          ...                ...
+L'Oreal Colour Cosmetics         2        17.18                  2
+Roc                              1         9.13                  1
+NYX                              1         0.92                  1
+Theya Garments                   1        24.80                  1
+First Aid Supports               0         6.64                  2
+
+[216 rows x 3 columns]
+
+Total unique Groups: 216
+
+================================================================================
+COMBINED: DEPT + GROUP + BRANCH (Top 50 by quantity)
+================================================================================
+                                                                      Qty Sold  Trade Price
+Dept Fullname                   Group Fullname      Branch Name                            
+OTC : Analgesics                Analgesics          Baggot St            25058    128668.12
+                                                    Churchtown           20540    106842.81
+                                                    Kinvara              20371     99919.51
+OTC : First Aid                 First aid           Baggot St            19057     42817.72
+OTC : Analgesics                Analgesics          Barrow St            17416     76305.97
+OTC : First Aid                 First aid           Barrow St            17257     28638.91
+OTC : Analgesics                Analgesics          Mater Hospital       16903     72663.33
+                                                    Bhagwans             13382     62449.07
+OTC : First Aid                 First aid           Churchtown           13046     27025.20
+OTC : GIT                       GIT                 Baggot St            12988     65541.05
+Dermo Skincare : La Roche Posay La Roche Posay      Baggot St            12916    137531.31
+OTC : Analgesics                Analgesics          Ranelagh Village     12865     62942.77
+OTC : Cold & Flu                Cough/Cold/Flu      Baggot St            12577     47853.10
+OTC : Analgesics                Analgesics          Castletymon          12284     69262.58
+OTC : First Aid                 First aid           Kinvara              11767     20073.93
+OTC : Analgesics                Analgesics          Glenview             11744     64873.04
+Vitamins                        Other Vitamins      Baggot St            11595    122162.72
+OTC : Cold & Flu                Cough/Cold/Flu      Barrow St            10950     43540.06
+OTC : Eye Ear Nose & Throat     Eye/Ear/Nose/Throat Baggot St            10667     50936.10
+Vitamins                        Other Vitamins      Barrow St             9922     95206.78
+OTC : GIT                       GIT                 Barrow St             9248     46905.81
+                                                    Churchtown            8788     46524.07
+                                                    Kinvara               8757     44800.08
+OTC : Eye Ear Nose & Throat     Eye/Ear/Nose/Throat Barrow St             8305     40268.72
+OTC : Cold & Flu                Cough/Cold/Flu      Churchtown            8057     31212.15
+OTC : First Aid                 First aid           Bhagwans              7741     10181.15
+                                                    Ranelagh Village      7728     13067.11
+OTC : GIT                       GIT                 Mater Hospital        7710     40651.80
+OTC : Cold & Flu                Cough/Cold/Flu      Kinvara               7679     31370.33
+Self Selection Stands           Catrice Make Up     Mater Hospital        7556     17152.66
+OTC : First Aid                 First aid           Mater Hospital        7416     14932.49
+Vitamins                        Other Vitamins      Churchtown            7175     77966.89
+Dermo Skincare : La Roche Posay La Roche Posay      Barrow St             7161     78370.12
+OTC : Cold & Flu                Cough/Cold/Flu      Mater Hospital        7099     24141.50
+OTC : GIT                       GIT                 Ranelagh Village      6881     34930.14
+OTC : Cold & Flu                Cough/Cold/Flu      Ranelagh Village      6497     24154.05
+OTC : First Aid                 First aid           Castletymon           6373     10457.48
+Self Selection Stands           Catrice Make Up     Baggot St             6301     14055.59
+OTC : Eye Ear Nose & Throat     Eye/Ear/Nose/Throat Churchtown            6282     32201.72
+Gifts : Gifts                   Gifts               Castletymon           6131     33228.24
+OTC : GIT                       GIT                 Bhagwans              6072     30413.30
+Dermo Skincare : La Roche Posay La Roche Posay      Churchtown            5850     64644.30
+Self Selection Stands           Catrice Make Up     Barrow St             5848     12948.83
+OTC : Cold & Flu                Cough/Cold/Flu      Bhagwans              5842     22220.85
+Dermo Skincare : CeraVe         CeraVe              Baggot St             5712     50928.32
+OTC : Analgesics                Analgesics          Sandford Rd           5672     25765.69
+Gifts : Greeting Cards          Gifts               Barrow St             5465      6644.40
+Vitamins                        Other Vitamins      Kinvara               5442     48749.59
+OTC : First Aid                 First aid           Glenview              5436      9939.68
+Dermo Skincare                  Caudalie Skincare   Baggot St             5408     61642.15
+
+================================================================================
+MONTHLY SALES SUMMARY
+================================================================================
+         Qty Sold  Trade Price  Transaction Count
+Month                                            
+2023-09     49597    292217.19              45607
+2023-10     51290    297035.38              47042
+2023-11     52052    318215.29              48080
+2023-12     59055    385687.31              54196
+2024-01     52435    313557.33              48062
+2024-02     50604    299874.78              46666
+2024-03     55564    329637.14              49920
+2024-04     53683    323758.46              49585
+2024-05     57699    341786.78              53029
+2024-06     55164    321010.41              49717
+2024-07     57487    344103.22              52760
+2024-08     52519    322686.32              48388
+2024-09     52664    311404.49              48411
+2024-10     55015    325274.29              50849
+2024-11     56811    367166.27              52222
+2024-12     65568    428390.92              59407
+2025-01     56901    360517.04              51945
+2025-02     48209    288411.75              44055
+2025-03     53899    331106.07              48319
+2025-04     50503    307468.30              46574
+2025-05     54309    336577.91              49823
+2025-06     51109    309833.09              46880
+2025-07     52683    316524.33              48616
+2025-08     46442    279147.23              42718
+2025-09     71656    427433.46              65726
+2025-10     81629    484499.11              75454
+

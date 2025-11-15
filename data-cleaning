@@ -61,3 +61,102 @@ print(f"Analysis results saved to: {output_file}")
 print(f"\nSummary:")
 print(f"  - Cleaned CSV: data/Retail/retail_inventory_snapshot_30_10_25_cleaned.csv")
 print(f"  - Analysis results: {output_file}")
+
+#### for file in data/Retail/sales_data:
+# Read the CSV file
+df = pd.read_csv('data/Retail/retail_sales_data_01_09_2023_to_31_10_2025.csv')
+
+# Drop redundant/less useful columns
+columns_to_drop = ['Barcode', 'OrderList', 'Sale Date', 'Discount Band', 'Refund Qty']
+df_cleaned = df.drop(columns=columns_to_drop)
+
+# Save the cleaned CSV
+df_cleaned.to_csv('data/Retail/retail_sales_data_01_09_2023_to_31_10_2025_cleaned.csv', index=False)
+print("Cleaned CSV saved (dropped: Barcode, OrderList, Sale Date, Discount Band, Refund Qty)")
+
+# Open a file to write analysis results
+output_file = 'data/Retail/sales_analysis_results.txt'
+with open(output_file, 'w') as f:
+    f.write("="*80 + "\n")
+    f.write("SALES DATA ANALYSIS RESULTS\n")
+    f.write("="*80 + "\n\n")
+    
+    # 1. COUNT PACKSIZE
+    f.write("="*80 + "\n")
+    f.write("PACKSIZE VALUE COUNTS\n")
+    f.write("="*80 + "\n")
+    packsize_counts = df['Packsize'].value_counts()
+    f.write(str(packsize_counts) + "\n")
+    f.write(f"\nTotal unique Packsizes: {df['Packsize'].nunique()}\n\n")
+    
+    # 2. TOP SELLING PRODUCTS
+    f.write("="*80 + "\n")
+    f.write("TOP 50 SELLING PRODUCTS (by quantity sold)\n")
+    f.write("="*80 + "\n")
+    top_products = df.groupby('Product')['Qty Sold'].sum().sort_values(ascending=False).head(50)
+    f.write(str(top_products) + "\n\n")
+    
+    # 3. SALES BY BRANCH
+    f.write("="*80 + "\n")
+    f.write("BRANCH NAME - SALES COUNTS & QUANTITY SOLD\n")
+    f.write("="*80 + "\n")
+    branch_stats = df.groupby('Branch Name').agg({
+        'Qty Sold': 'sum',
+        'Trade Price': 'sum',
+        'Product': 'count'
+    }).rename(columns={'Product': 'Transaction Count'}).sort_values('Qty Sold', ascending=False)
+    f.write(str(branch_stats) + "\n")
+    f.write(f"\nTotal unique Branches: {df['Branch Name'].nunique()}\n\n")
+    
+    # 4. SALES BY DEPARTMENT
+    f.write("="*80 + "\n")
+    f.write("DEPT FULLNAME - SALES ANALYSIS\n")
+    f.write("="*80 + "\n")
+    dept_stats = df.groupby('Dept Fullname').agg({
+        'Qty Sold': 'sum',
+        'Trade Price': 'sum',
+        'Product': 'count'
+    }).rename(columns={'Product': 'Transaction Count'}).sort_values('Qty Sold', ascending=False)
+    f.write(str(dept_stats) + "\n")
+    f.write(f"\nTotal unique Departments: {df['Dept Fullname'].nunique()}\n\n")
+    
+    # 5. SALES BY GROUP
+    f.write("="*80 + "\n")
+    f.write("GROUP FULLNAME - SALES ANALYSIS\n")
+    f.write("="*80 + "\n")
+    group_stats = df.groupby('Group Fullname').agg({
+        'Qty Sold': 'sum',
+        'Trade Price': 'sum',
+        'Product': 'count'
+    }).rename(columns={'Product': 'Transaction Count'}).sort_values('Qty Sold', ascending=False)
+    f.write(str(group_stats) + "\n")
+    f.write(f"\nTotal unique Groups: {df['Group Fullname'].nunique()}\n\n")
+    
+    # 6. COMBINED GROUPING
+    f.write("="*80 + "\n")
+    f.write("COMBINED: DEPT + GROUP + BRANCH (Top 50 by quantity)\n")
+    f.write("="*80 + "\n")
+    combined = df.groupby(['Dept Fullname', 'Group Fullname', 'Branch Name']).agg({
+        'Qty Sold': 'sum',
+        'Trade Price': 'sum'
+    }).sort_values('Qty Sold', ascending=False).head(50)
+    f.write(str(combined) + "\n\n")
+    
+    # 7. SALES OVER TIME (monthly summary)
+    f.write("="*80 + "\n")
+    f.write("MONTHLY SALES SUMMARY\n")
+    f.write("="*80 + "\n")
+    df['Sale Date'] = pd.to_datetime(df['Sale Date'], format='mixed', dayfirst=True)
+    df['Month'] = df['Sale Date'].dt.to_period('M')
+    monthly_sales = df.groupby('Month').agg({
+        'Qty Sold': 'sum',
+        'Trade Price': 'sum',
+        'Product': 'count'
+    }).rename(columns={'Product': 'Transaction Count'})
+    f.write(str(monthly_sales) + "\n\n")
+
+print(f"Analysis results saved to: {output_file}")
+print(f"\nSummary:")
+print(f"  - Cleaned CSV: data/Retail/retail_sales_data_01_09_2023_to_31_10_2025_cleaned.csv")
+print(f"  - Analysis results: {output_file}")
+print(f"  - Total records: {len(df):,}")
