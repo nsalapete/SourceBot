@@ -2,7 +2,7 @@ import anthropic
 
 client = anthropic.Anthropic(
   # defaults to os.environ.get("ANTHROPIC_API_KEY")
-  api_key="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",
+  api_key="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",
 )
 
 message_batch = client.messages.batches.create(

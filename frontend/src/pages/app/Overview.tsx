@@ -262,40 +262,88 @@ export default function Overview() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                   <div className="text-2xl font-bold text-primary">
-                    {state.findings.statistics.total_suppliers || 0}
+                    {state.findings.statistics.total_products || 0}
                   </div>
-                  <div className="text-xs text-muted-foreground">Total Suppliers</div>
+                  <div className="text-xs text-muted-foreground">Total Products</div>
                 </div>
                 <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
                   <div className="text-2xl font-bold text-green-600">
-                    {state.findings.statistics.active_count || 0}
+                    {state.findings.statistics.unique_suppliers || 0}
                   </div>
-                  <div className="text-xs text-muted-foreground">Active Suppliers</div>
+                  <div className="text-xs text-muted-foreground">Unique Suppliers</div>
                 </div>
                 <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
                   <div className="text-2xl font-bold text-blue-600">
-                    {state.findings.statistics.high_rated_electronics_suppliers || 0}
+                    {state.findings.statistics.total_sales_transactions || 0}
                   </div>
-                  <div className="text-xs text-muted-foreground">High Rated</div>
+                  <div className="text-xs text-muted-foreground">Sales Transactions</div>
                 </div>
                 <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
                   <div className="text-2xl font-bold text-amber-600">
-                    {state.findings.statistics.average_rating?.toFixed(1) || 'N/A'}
+                    €{(state.findings.statistics.total_revenue || 0).toLocaleString()}
                   </div>
-                  <div className="text-xs text-muted-foreground">Avg Rating</div>
+                  <div className="text-xs text-muted-foreground">Total Revenue</div>
                 </div>
               </div>
             )}
 
-            {/* Category Breakdown */}
-            {state.findings.statistics?.by_category && (
+            {/* Additional Stats Row */}
+            {state.findings.statistics && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                  <div className="text-2xl font-bold text-purple-600">
+                    €{(state.findings.statistics.total_profit || 0).toLocaleString()}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Total Profit</div>
+                </div>
+                <div className="p-4 rounded-lg bg-pink-500/10 border border-pink-500/20">
+                  <div className="text-2xl font-bold text-pink-600">
+                    {state.findings.statistics.avg_profit_margin?.toFixed(1) || 'N/A'}%
+                  </div>
+                  <div className="text-xs text-muted-foreground">Avg Profit Margin</div>
+                </div>
+                <div className="p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                  <div className="text-2xl font-bold text-cyan-600">
+                    €{(state.findings.statistics.avg_trade_price || 0).toFixed(2)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Avg Trade Price</div>
+                </div>
+                <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                  <div className="text-2xl font-bold text-orange-600">
+                    €{(state.findings.statistics.avg_rrp || 0).toFixed(2)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Avg RRP</div>
+                </div>
+              </div>
+            )}
+
+            {/* Department Breakdown */}
+            {state.findings.statistics?.departments && (
               <div>
-                <h4 className="text-sm font-semibold mb-3">Suppliers by Category</h4>
+                <h4 className="text-sm font-semibold mb-3">Products by Department</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {Object.entries(state.findings.statistics.by_category).map(([category, count]) => (
-                    <div key={category} className="p-3 rounded-lg bg-muted/50 border">
-                      <div className="font-semibold text-sm capitalize">{category}</div>
+                  {Object.entries(state.findings.statistics.departments).slice(0, 8).map(([dept, count]) => (
+                    <div key={dept} className="p-3 rounded-lg bg-muted/50 border">
+                      <div className="font-semibold text-sm">{dept}</div>
                       <div className="text-xl font-bold text-primary">{count as number}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Top Suppliers */}
+            {state.findings.statistics?.top_suppliers && state.findings.statistics.top_suppliers.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold mb-3">Top Suppliers</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {state.findings.statistics.top_suppliers.slice(0, 3).map((supplier: any, idx: number) => (
+                    <div key={idx} className="p-4 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20">
+                      <div className="font-bold text-lg">{supplier.supplier}</div>
+                      <div className="text-sm text-muted-foreground">{supplier.product_count} products</div>
+                      <div className="text-sm font-semibold text-primary mt-1">
+                        €{(supplier.total_sales || 0).toLocaleString()} sales
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -319,40 +367,68 @@ export default function Overview() {
               </div>
             )}
 
-            {/* Relevant Suppliers */}
+            {/* Relevant Suppliers/Products */}
             {state.findings.relevant_suppliers && state.findings.relevant_suppliers.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold mb-3">Recommended Suppliers</h4>
+                <h4 className="text-sm font-semibold mb-3">Recommended Products & Suppliers</h4>
                 <div className="space-y-3">
-                  {state.findings.relevant_suppliers.map((supplier: any, index: number) => (
+                  {state.findings.relevant_suppliers.map((item: any, index: number) => (
                     <div key={index} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h5 className="font-semibold">{supplier.name}</h5>
-                          <p className="text-xs text-muted-foreground">ID: {supplier.id}</p>
-                        </div>
-                        <Badge variant={supplier.status === 'active' ? 'default' : 'secondary'}>
-                          {supplier.status}
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Category:</span>{' '}
-                          <span className="font-medium capitalize">{supplier.category}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Rating:</span>{' '}
-                          <span className="font-medium">{supplier.rating} ⭐</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Country:</span>{' '}
-                          <span className="font-medium">{supplier.country}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Contact:</span>{' '}
-                          <span className="font-medium text-xs">{supplier.contact_email}</span>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h5 className="font-semibold text-lg">{item.product}</h5>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            <span className="font-medium text-primary">Supplier:</span> {item.supplier}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            <span className="font-medium">Department:</span> {item.department}
+                          </p>
                         </div>
                       </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                        <div className="p-2 rounded bg-muted/50">
+                          <div className="text-xs text-muted-foreground">Trade Price</div>
+                          <div className="font-semibold">€{item.trade_price?.toFixed(2) || 'N/A'}</div>
+                        </div>
+                        <div className="p-2 rounded bg-muted/50">
+                          <div className="text-xs text-muted-foreground">RRP</div>
+                          <div className="font-semibold">€{item.rrp?.toFixed(2) || 'N/A'}</div>
+                        </div>
+                        <div className="p-2 rounded bg-muted/50">
+                          <div className="text-xs text-muted-foreground">Stock Level</div>
+                          <div className="font-semibold">{item.stock_level || 0}</div>
+                        </div>
+                        <div className="p-2 rounded bg-muted/50">
+                          <div className="text-xs text-muted-foreground">Qty Sold</div>
+                          <div className="font-semibold">{item.qty_sold || 0}</div>
+                        </div>
+                      </div>
+
+                      {(item.turnover || item.profit) && (
+                        <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                          {item.turnover && (
+                            <div className="p-2 rounded bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
+                              <div className="text-xs text-green-700 dark:text-green-300">Turnover</div>
+                              <div className="font-semibold text-green-900 dark:text-green-100">€{item.turnover?.toFixed(2)}</div>
+                            </div>
+                          )}
+                          {item.profit && (
+                            <div className="p-2 rounded bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
+                              <div className="text-xs text-blue-700 dark:text-blue-300">Profit</div>
+                              <div className="font-semibold text-blue-900 dark:text-blue-100">€{item.profit?.toFixed(2)}</div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {item.reason && (
+                        <div className="pt-3 border-t">
+                          <p className="text-sm text-muted-foreground italic">
+                            {item.reason}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -1,0 +1,11 @@
+Get-ChildItem "data\Retail\retail_sales_data_31_10_2025.csv" -ErrorAction SilentlyContinue | Select-Object Name, Length; Get-Content "data\Retail\retail_sales_data_31_10_2025.csv" -TotalCount 5 -ErrorAction SilentlyContinue
+
+Get-ChildItem "data\Retail\retail_sales_data_01_09_2023_to_31_10_2025_cleaned.csv" | Select-Object Name, Length; Get-Content "data\Retail\retail_sales_data_01_09_2023_to_31_10_2025_cleaned.csv" -TotalCount 5
+
+
+python -c "import os; os.chdir('C:\\Users\\nsala\\OneDrive\\Documents\\ESSEC\\Hackaton\\SourceBot'); from backend.researcher import load_suppliers_from_file; result = load_suppliers_from_file('data\\Retail\\retail_inventory_snapshot_30_10_25_cleaned.csv', 'data\\Retail\\retail_sales_data_01_09_2023_to_31_10_2025_cleaned.csv'); print('Success:', result.get('success')); print('Inventory count:', result.get('combined_data', {}).get('inventory_count', 0) if result.get('success') else 'Error'); print('Sales count:', result.get('combined_data', {}).get('sales_count', 0) if result.get('success') else 'Error')"
+
+
+taskkill /F /IM python.exe 2>$null; Start-Sleep -Seconds 3; Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd 'C:\Users\nsala\OneDrive\Documents\ESSEC\Hackaton\SourceBot\backend'; python orchestrator.py"; Start-Sleep -Seconds 6; echo "Backend started in new window"
+
+python backend\test_api.py

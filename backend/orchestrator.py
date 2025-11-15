@@ -36,7 +36,8 @@ workflow_state = {
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
 ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 CLAUDE_MODEL = os.getenv('CLAUDE_MODEL', 'claude-sonnet-4-5-20250929')
-SUPPLIERS_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'Retail', 'retail_inventory_snapshot_30_10_25_cleaned.csv')
+INVENTORY_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'Retail', 'retail_inventory_snapshot_30_10_25_cleaned.csv')
+SALES_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'Retail', 'retail_sales_data_01_09_2023_to_31_10_2025_cleaned.csv')
 
 
 @app.route('/', methods=['GET'])
@@ -120,17 +121,17 @@ def execute_research():
     workflow_state["status"] = "researching"
     workflow_state["current_step"] = 1
     
-    # Load suppliers data (fake CRM connection)
-    suppliers_result = load_suppliers_from_file(SUPPLIERS_FILE)
+    # Load inventory and sales data
+    data_result = load_suppliers_from_file(INVENTORY_FILE, SALES_FILE)
     
-    if not suppliers_result.get('success'):
+    if not data_result.get('success'):
         workflow_state["status"] = "error"
         return jsonify({
-            "error": "Failed to load suppliers",
-            "details": suppliers_result.get('error')
+            "error": "Failed to load data",
+            "details": data_result.get('error')
         }), 500
     
-    workflow_state["suppliers_data"] = suppliers_result["suppliers"]
+    workflow_state["suppliers_data"] = data_result["combined_data"]
     
     # Call Researcher Agent
     research_result = analyze_suppliers(
@@ -317,6 +318,7 @@ if __name__ == '__main__':
     
     print(f"Starting orchestrator on port 5000...")
     print(f"Using Claude model: {CLAUDE_MODEL}")
-    print(f"Suppliers file: {SUPPLIERS_FILE}")
+    print(f"Inventory file: {INVENTORY_FILE}")
+    print(f"Sales file: {SALES_FILE}")
     
     app.run(debug=True, host='0.0.0.0', port=5000)
