@@ -2,14 +2,8 @@
 // Handles connection to Flask backend via local or ngrok URL
 
 const getApiUrl = (): string => {
-  // Priority: ngrok URL > local API URL > fallback
-  const ngrokUrl = import.meta.env.VITE_NGROK_URL;
+  // Use local API URL only
   const apiUrl = import.meta.env.VITE_API_URL;
-  
-  if (ngrokUrl && ngrokUrl !== '') {
-    console.log('🌐 Using ngrok URL:', ngrokUrl);
-    return ngrokUrl;
-  }
   
   if (apiUrl && apiUrl !== '') {
     console.log('🔗 Using local API URL:', apiUrl);
