@@ -76,3 +76,6 @@ data/suppliers.json
 data/Retail/*.csv
 data/Retail/*.csv
 data/Retail/*.csv
+
+data/*
+!data/*.zip

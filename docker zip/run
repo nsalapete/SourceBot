@@ -1,0 +1,2 @@
+sqlite> SELECT COUNT(*) FROM sales;
+sqlite> SELECT * FROM inventory LIMIT 10;
