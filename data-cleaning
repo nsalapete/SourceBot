@@ -1,0 +1,63 @@
+import pandas as pd
+
+# Read the CSV file
+df = pd.read_csv('data/Retail/retail_inventory_snapshot_30_10_25.csv')
+
+# Drop the specified columns
+df_cleaned = df.drop(columns=['Barcode2', 'Barcode3'])
+
+# Save the cleaned CSV (with columns dropped only)
+df_cleaned.to_csv('data/Retail/retail_inventory_snapshot_30_10_25_cleaned.csv', index=False)
+print("Cleaned CSV saved (Barcode2 and Barcode3 removed)")
+
+# Open a file to write analysis results
+output_file = 'data/Retail/analysis_results.txt'
+with open(output_file, 'w') as f:
+    f.write("="*80 + "\n")
+    f.write("DATA ANALYSIS RESULTS\n")
+    f.write("="*80 + "\n\n")
+    
+    # 1. COUNT PACKSIZE
+    f.write("="*80 + "\n")
+    f.write("PACKSIZE VALUE COUNTS\n")
+    f.write("="*80 + "\n")
+    packsize_counts = df['Packsize'].value_counts()
+    f.write(str(packsize_counts) + "\n")
+    f.write(f"\nTotal unique Packsizes: {df['Packsize'].nunique()}\n\n")
+    
+    # 2. FIND GROUPS FOR DEPT FULLNAME
+    f.write("="*80 + "\n")
+    f.write("DEPT FULLNAME - UNIQUE VALUES & COUNTS\n")
+    f.write("="*80 + "\n")
+    dept_counts = df['Dept Fullname'].value_counts()
+    f.write(str(dept_counts) + "\n")
+    f.write(f"\nTotal unique Departments: {df['Dept Fullname'].nunique()}\n\n")
+    
+    # 3. FIND GROUPS FOR GROUP FULLNAME
+    f.write("="*80 + "\n")
+    f.write("GROUP FULLNAME - UNIQUE VALUES & COUNTS\n")
+    f.write("="*80 + "\n")
+    group_counts = df['Group Fullname'].value_counts()
+    f.write(str(group_counts) + "\n")
+    f.write(f"\nTotal unique Groups: {df['Group Fullname'].nunique()}\n\n")
+    
+    # 4. FIND GROUPS FOR BRANCH NAME
+    f.write("="*80 + "\n")
+    f.write("BRANCH NAME - UNIQUE VALUES & COUNTS\n")
+    f.write("="*80 + "\n")
+    branch_counts = df['Branch Name'].value_counts()
+    f.write(str(branch_counts) + "\n")
+    f.write(f"\nTotal unique Branches: {df['Branch Name'].nunique()}\n\n")
+    
+    # 5. COMBINED GROUPING
+    f.write("="*80 + "\n")
+    f.write("COMBINED GROUPING: DEPT + GROUP + BRANCH (First 50)\n")
+    f.write("="*80 + "\n")
+    combined = df.groupby(['Dept Fullname', 'Group Fullname', 'Branch Name']).size().reset_index(name='Count')
+    f.write(str(combined.head(50)) + "\n")
+    f.write(f"\nTotal unique combinations: {len(combined)}\n")
+
+print(f"Analysis results saved to: {output_file}")
+print(f"\nSummary:")
+print(f"  - Cleaned CSV: data/Retail/retail_inventory_snapshot_30_10_25_cleaned.csv")
+print(f"  - Analysis results: {output_file}")

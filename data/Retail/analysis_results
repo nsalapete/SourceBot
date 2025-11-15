@@ -1,0 +1,135 @@
+================================================================================
+DATA ANALYSIS RESULTS
+================================================================================
+
+================================================================================
+PACKSIZE VALUE COUNTS
+================================================================================
+Packsize
+1             123425
+               45300
+50ml           28483
+0              24690
+200ml          21404
+               ...  
+20caps             1
+16caps             1
+40caps             1
+80caps             1
+28 Sachets         1
+Name: count, Length: 7737, dtype: int64
+
+Total unique Packsizes: 7737
+
+================================================================================
+DEPT FULLNAME - UNIQUE VALUES & COUNTS
+================================================================================
+Dept Fullname
+Gifts : Gifts                                    132606
+Self Selection Stands : Self Selection Stands    118401
+Jewellery : Jewellery                             51090
+Toiletries : Skincare                             45351
+Beauty Accessories : Beauty Accessories           41351
+                                                  ...  
+Prescriptions : Private Rx                           10
+Nutritional Supplements : Kinetica Nutrition         10
+Dermo Skincare : Skin Lab Treatment                  10
+Babycare : Babycare Toiletries                        8
+Consultation Services : Pneumococcal Vaccine          1
+Name: count, Length: 96, dtype: int64
+
+Total unique Departments: 96
+
+================================================================================
+GROUP FULLNAME - UNIQUE VALUES & COUNTS
+================================================================================
+Group Fullname
+Gifts                92386
+Other Make Up        36381
+Christmas            34433
+Skin Care            30160
+Catrice Make Up      27771
+                     ...  
+Celebrity Slim           8
+GlamGlow                 6
+First Aid Hygeine        6
+Psychiatric Rx           6
+LTI Prescriptions        6
+Name: count, Length: 269, dtype: int64
+
+Total unique Groups: 269
+
+================================================================================
+BRANCH NAME - UNIQUE VALUES & COUNTS
+================================================================================
+Branch Name
+Baggot St           89521
+Barrow St           89518
+Castletymon         89516
+Ranelagh Village    89509
+Glenview            89474
+Sandford Rd         89459
+Mater Hospital      74228
+Kinvara             74071
+Churchtown          71108
+Bhagwans            67961
+Name: count, dtype: int64
+
+Total unique Branches: 10
+
+================================================================================
+COMBINED GROUPING: DEPT + GROUP + BRANCH (First 50)
+================================================================================
+             Dept Fullname        Group Fullname       Branch Name  Count
+0   Babycare : Accessories            Baby Gifts         Baggot St     11
+1   Babycare : Accessories            Baby Gifts         Barrow St     11
+2   Babycare : Accessories            Baby Gifts          Bhagwans     11
+3   Babycare : Accessories            Baby Gifts       Castletymon     11
+4   Babycare : Accessories            Baby Gifts        Churchtown     11
+5   Babycare : Accessories            Baby Gifts          Glenview     11
+6   Babycare : Accessories            Baby Gifts           Kinvara     11
+7   Babycare : Accessories            Baby Gifts    Mater Hospital     11
+8   Babycare : Accessories            Baby Gifts  Ranelagh Village     11
+9   Babycare : Accessories            Baby Gifts       Sandford Rd     11
+10  Babycare : Accessories  Babycare Accessories         Baggot St   1665
+11  Babycare : Accessories  Babycare Accessories         Barrow St   1667
+12  Babycare : Accessories  Babycare Accessories          Bhagwans   1000
+13  Babycare : Accessories  Babycare Accessories       Castletymon   1679
+14  Babycare : Accessories  Babycare Accessories        Churchtown   1011
+15  Babycare : Accessories  Babycare Accessories          Glenview   1664
+16  Babycare : Accessories  Babycare Accessories           Kinvara   1149
+17  Babycare : Accessories  Babycare Accessories    Mater Hospital   1146
+18  Babycare : Accessories  Babycare Accessories  Ranelagh Village   1665
+19  Babycare : Accessories  Babycare Accessories       Sandford Rd   1665
+20  Babycare : Accessories     Babycare BabyFood         Baggot St     35
+21  Babycare : Accessories     Babycare BabyFood         Barrow St     35
+22  Babycare : Accessories     Babycare BabyFood          Bhagwans      2
+23  Babycare : Accessories     Babycare BabyFood       Castletymon     35
+24  Babycare : Accessories     Babycare BabyFood        Churchtown      2
+25  Babycare : Accessories     Babycare BabyFood          Glenview     35
+26  Babycare : Accessories     Babycare BabyFood           Kinvara      4
+27  Babycare : Accessories     Babycare BabyFood    Mater Hospital      4
+28  Babycare : Accessories     Babycare BabyFood  Ranelagh Village     35
+29  Babycare : Accessories     Babycare BabyFood       Sandford Rd     35
+30  Babycare : Accessories   Babycare Mothercare         Baggot St      3
+31  Babycare : Accessories   Babycare Mothercare         Barrow St      3
+32  Babycare : Accessories   Babycare Mothercare          Bhagwans      3
+33  Babycare : Accessories   Babycare Mothercare       Castletymon      3
+34  Babycare : Accessories   Babycare Mothercare        Churchtown      3
+35  Babycare : Accessories   Babycare Mothercare          Glenview      3
+36  Babycare : Accessories   Babycare Mothercare           Kinvara      3
+37  Babycare : Accessories   Babycare Mothercare    Mater Hospital      3
+38  Babycare : Accessories   Babycare Mothercare  Ranelagh Village      3
+39  Babycare : Accessories   Babycare Mothercare       Sandford Rd      3
+40  Babycare : Accessories     Babycare Skincare         Baggot St      2
+41  Babycare : Accessories     Babycare Skincare         Barrow St      2
+42  Babycare : Accessories     Babycare Skincare          Bhagwans      2
+43  Babycare : Accessories     Babycare Skincare       Castletymon      2
+44  Babycare : Accessories     Babycare Skincare        Churchtown      2
+45  Babycare : Accessories     Babycare Skincare          Glenview      2
+46  Babycare : Accessories     Babycare Skincare           Kinvara      2
+47  Babycare : Accessories     Babycare Skincare    Mater Hospital      2
+48  Babycare : Accessories     Babycare Skincare  Ranelagh Village      2
+49  Babycare : Accessories     Babycare Skincare       Sandford Rd      2
+
+Total unique combinations: 5479
