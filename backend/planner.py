@@ -17,6 +17,12 @@ def create_plan(goal, api_key, model="claude-sonnet-4-5-20250929"):
     Returns:
         list: Array of plan steps
     """
+    if not api_key:
+        return {
+            "success": False,
+            "error": "ANTHROPIC_API_KEY is missing. Add it to api.env to use real planning.",
+        }
+
     client = anthropic.Anthropic(api_key=api_key)
     
     prompt = f"""You are a strategic planning assistant for supplier relationship management.
@@ -83,5 +89,5 @@ Only return the JSON array, no other text."""
     except Exception as e:
         return {
             "success": False,
-            "error": str(e)
+            "error": f"Planner call failed: {e}",
         }
