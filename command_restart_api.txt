@@ -1,6 +1,6 @@
 #taskkill /F /IM python.exe 2>$null; Start-Sleep -Seconds 2; echo "Restarting backend..."
 
-#Start-Process python -ArgumentList "backend\orchestrator.py" -WorkingDirectory "C:\Users\nsala\OneDrive\Documents\ESSEC\Hackaton\SourceBot" -WindowStyle Hidden; Start-Sleep -Seconds 4; echo "Backend started"
+#Start-Process python -ArgumentList "backend\orchestrator.py" -WorkingDirectory "C:\Users\gdest\SourceBot-2" -WindowStyle Hidden; Start-Sleep -Seconds 4; echo "Backend started"
 
 #python backend\test_api.py
 
