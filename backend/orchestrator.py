@@ -17,7 +17,7 @@ from reporter import generate_status_report, generate_voice_report
 
 # Load environment variables from root directory
 root_dir = pathlib.Path(__file__).parent.parent
-load_dotenv(root_dir / 'api.env')
+load_dotenv(root_dir / './env_files/api.env')
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend communication
