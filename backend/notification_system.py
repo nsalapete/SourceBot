@@ -3,7 +3,7 @@ Notification System - Manages real-time notifications and agent platform integra
 Replaces manual approvals with immediate manager notifications
 Includes ElevenLabs voice notification support
 """
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, Response
 from flask_cors import CORS
 import os
 from dotenv import load_dotenv
@@ -13,26 +13,25 @@ from typing import Dict, List, Any, Optional
 import threading
 import queue
 import uuid
-from elevenlabs.client import ElevenLabs
 import io
+from voice_utils import generate_voice, format_notification_text
 
-# Load environment variables
-load_dotenv('api.env')
+# Load environment variables from root directory
+import pathlib
+root_dir = pathlib.Path(__file__).parent.parent
+load_dotenv(root_dir / 'api.env')
 
 app = Flask(__name__)
 CORS(app)
 
-# Initialize ElevenLabs client
+# Voice settings
 ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 ELEVENLABS_VOICE_ID = os.getenv('ELEVENLABS_VOICE_ID', 'JBFqnCBsd6RMkjVDRZzb')
-ELEVENLABS_MODEL = os.getenv('ELEVENLABS_MODEL', 'eleven_multilingual_v2')
 
-elevenlabs_client = None
 if ELEVENLABS_API_KEY:
-    elevenlabs_client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
-    print(f"✓ ElevenLabs client initialized with voice ID: {ELEVENLABS_VOICE_ID}")
+    print(f"✓ ElevenLabs voice enabled: {ELEVENLABS_VOICE_ID}")
 else:
-    print("⚠ Warning: ELEVENLABS_API_KEY not found in environment")
+    print("⚠ Warning: ELEVENLABS_API_KEY not found")
 
 # Global notification state
 notification_state = {
@@ -52,183 +51,7 @@ ENABLE_AUTO_APPROVAL = os.getenv('ENABLE_AUTO_APPROVAL', 'false').lower() == 'tr
 ENABLE_VOICE_NOTIFICATIONS = os.getenv('ENABLE_VOICE_NOTIFICATIONS', 'true').lower() == 'true'
 
 
-class VoiceNotificationGenerator:
-    """Generates voice notifications using ElevenLabs"""
-    
-    @staticmethod
-    def generate_voice_notification(notification: Dict[str, Any]) -> Optional[bytes]:
-        """
-        Convert notification to voice using ElevenLabs
-        
-        Args:
-            notification: Notification object with title, message, and data
-            
-        Returns:
-            Audio bytes (MP3) or None if generation fails
-        """
-        if not elevenlabs_client:
-            print("⚠ ElevenLabs client not initialized")
-            return None
-        
-        try:
-            # Construct natural language message for voice
-            voice_text = VoiceNotificationGenerator._construct_voice_message(notification)
-            
-            print(f"🔊 Generating voice notification: {notification['id'][:8]}...")
-            print(f"   Text: {voice_text[:100]}...")
-            
-            # Generate speech using ElevenLabs with proper output format
-            audio_generator = elevenlabs_client.text_to_speech.convert(
-                voice_id=ELEVENLABS_VOICE_ID,
-                output_format="mp3_44100_128",  # Explicit MP3 format
-                model_id=ELEVENLABS_MODEL,
-                text=voice_text
-            )
-            
-            # Collect audio chunks into bytes
-            audio_chunks = []
-            for chunk in audio_generator:
-                if chunk:
-                    audio_chunks.append(chunk)
-            
-            audio_bytes = b"".join(audio_chunks)
-            
-            print(f"✓ Voice notification generated: {len(audio_bytes)} bytes")
-            return audio_bytes
-            
-        except Exception as e:
-            print(f"✗ Error generating voice notification: {e}")
-            return None
-    
-    @staticmethod
-    def _construct_voice_message(notification: Dict[str, Any]) -> str:
-        """
-        Construct natural language message for voice notification
-        Formats business data (inventory, cashflow, etc.) naturally
-        """
-        notification_type = notification.get('type', 'info')
-        title = notification.get('title', '')
-        message = notification.get('message', '')
-        priority = notification.get('priority', 'medium')
-        data = notification.get('data', {})
-        
-        # Start with greeting based on priority
-        if priority == 'critical':
-            voice_parts = ["Urgent notification."]
-        elif priority == 'high':
-            voice_parts = ["Important notification."]
-        else:
-            voice_parts = ["Notification."]
-        
-        # Add title
-        voice_parts.append(title)
-        
-        # Add main message
-        voice_parts.append(message)
-        
-        # Add specific data formatting based on type
-        if notification_type == 'approval_request':
-            voice_parts.append("Please review and provide approval.")
-        
-        # Format business-specific data
-        if 'inventory' in data:
-            inventory_msg = VoiceNotificationGenerator._format_inventory_data(data['inventory'])
-            if inventory_msg:
-                voice_parts.append(inventory_msg)
-        
-        if 'cashflow' in data:
-            cashflow_msg = VoiceNotificationGenerator._format_cashflow_data(data['cashflow'])
-            if cashflow_msg:
-                voice_parts.append(cashflow_msg)
-        
-        if 'purchase_recommendation' in data:
-            purchase_msg = VoiceNotificationGenerator._format_purchase_data(data['purchase_recommendation'])
-            if purchase_msg:
-                voice_parts.append(purchase_msg)
-        
-        if 'findings' in data:
-            findings = data['findings']
-            if isinstance(findings, dict):
-                if 'supplier_count' in findings:
-                    voice_parts.append(f"Found {findings['supplier_count']} suppliers.")
-                if 'summary' in findings:
-                    voice_parts.append(findings['summary'])
-        
-        # Join all parts naturally
-        voice_text = " ".join(voice_parts)
-        
-        return voice_text
-    
-    @staticmethod
-    def _format_inventory_data(inventory: Dict[str, Any]) -> str:
-        """Format inventory data for voice"""
-        parts = []
-        
-        if 'current_stock' in inventory:
-            parts.append(f"Current inventory is {inventory['current_stock']} units.")
-        
-        if 'low_stock_items' in inventory:
-            low_items = inventory['low_stock_items']
-            if isinstance(low_items, list) and low_items:
-                items_str = ", ".join(low_items[:3])  # First 3 items
-                parts.append(f"Low stock alert for: {items_str}.")
-        
-        if 'reorder_needed' in inventory and inventory['reorder_needed']:
-            parts.append("Reordering is required.")
-        
-        return " ".join(parts)
-    
-    @staticmethod
-    def _format_cashflow_data(cashflow: Dict[str, Any]) -> str:
-        """Format cashflow data for voice"""
-        parts = []
-        
-        if 'balance' in cashflow:
-            balance = cashflow['balance']
-            parts.append(f"Current cash flow balance is {balance} dollars.")
-        
-        if 'incoming' in cashflow:
-            parts.append(f"Incoming: {cashflow['incoming']} dollars.")
-        
-        if 'outgoing' in cashflow:
-            parts.append(f"Outgoing: {cashflow['outgoing']} dollars.")
-        
-        if 'status' in cashflow:
-            status = cashflow['status']
-            if status == 'warning':
-                parts.append("Cash flow requires attention.")
-            elif status == 'critical':
-                parts.append("Critical cash flow situation.")
-        
-        return " ".join(parts)
-    
-    @staticmethod
-    def _format_purchase_data(purchase: Dict[str, Any]) -> str:
-        """Format purchase recommendation for voice"""
-        parts = []
-        
-        if 'items' in purchase:
-            items = purchase['items']
-            if isinstance(items, list) and items:
-                parts.append(f"You need to buy {len(items)} items.")
-                # List first 3 items
-                for item in items[:3]:
-                    if isinstance(item, dict):
-                        name = item.get('name', 'Unknown item')
-                        quantity = item.get('quantity', '')
-                        parts.append(f"{name}, quantity {quantity}.")
-        
-        if 'total_cost' in purchase:
-            parts.append(f"Total estimated cost: {purchase['total_cost']} dollars.")
-        
-        if 'urgency' in purchase:
-            urgency = purchase['urgency']
-            if urgency == 'high':
-                parts.append("High urgency purchase.")
-            elif urgency == 'critical':
-                parts.append("Critical. Immediate purchase required.")
-        
-        return " ".join(parts)
+# Voice generation now handled by voice_utils.py module
 
 
 class NotificationManager:
@@ -303,7 +126,7 @@ class NotificationManager:
             print(f"  → Awaiting manager approval (ID: {notification_id})")
         
         # Generate voice notification asynchronously if enabled
-        if generate_voice and elevenlabs_client:
+        if generate_voice and ELEVENLABS_API_KEY:
             threading.Thread(
                 target=NotificationManager._generate_voice_async,
                 args=(notification_id, notification),
@@ -316,7 +139,13 @@ class NotificationManager:
     def _generate_voice_async(notification_id: str, notification: Dict[str, Any]):
         """Generate voice notification in background thread"""
         try:
-            audio_bytes = VoiceNotificationGenerator.generate_voice_notification(notification)
+            # Use shared voice_utils module
+            text = format_notification_text(notification)
+            audio_bytes = generate_voice(
+                text=text,
+                api_key=ELEVENLABS_API_KEY,
+                voice_id=ELEVENLABS_VOICE_ID
+            )
             
             if audio_bytes:
                 # Cache the audio
@@ -433,7 +262,7 @@ def health_check():
         "message": "Notification service is running",
         "active_listeners": notification_state["active_listeners"],
         "pending_count": len(notification_state["pending"]),
-        "voice_enabled": ENABLE_VOICE_NOTIFICATIONS and elevenlabs_client is not None,
+        "voice_enabled": ENABLE_VOICE_NOTIFICATIONS and ELEVENLABS_API_KEY is not None,
         "cached_voices": len(notification_state["voice_cache"])
     })
 
@@ -642,11 +471,15 @@ def notification_stream():
             # Decrement listener count
             notification_state["active_listeners"] -= 1
     
-    return event_generator(), 200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'X-Accel-Buffering': 'no'
-    }
+    return Response(
+        event_generator(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no',
+            'Connection': 'keep-alive'
+        }
+    )
 
 
 # ============ AGENT INTEGRATION HELPERS ============
@@ -800,12 +633,12 @@ if __name__ == '__main__':
     print(f"Voice notifications enabled: {ENABLE_VOICE_NOTIFICATIONS}")
     print(f"Agent Platform URL: {AGENT_PLATFORM_URL}")
     
-    if elevenlabs_client:
+    if ELEVENLABS_API_KEY:
         print(f"✓ ElevenLabs voice: {ELEVENLABS_VOICE_ID}")
-        print(f"✓ ElevenLabs model: {ELEVENLABS_MODEL}")
     
     print("\nNotification service is ready to receive events from agents")
     print("Managers can connect to /api/notifications/stream for real-time updates")
     print("Voice notifications available at /api/notifications/<id>/voice")
     
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    # Use threaded mode for better SSE support, disable debug reloader
+    app.run(debug=False, host='0.0.0.0', port=5001, threaded=True)
