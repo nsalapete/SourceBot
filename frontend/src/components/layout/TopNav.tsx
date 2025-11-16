@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { NotificationCenter } from "@/components/NotificationCenter";
+
 export function TopNav() {
   const navigate = useNavigate();
   return <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
@@ -18,6 +20,7 @@ export function TopNav() {
         </div>
 
         <div className="ml-auto flex items-center gap-4">
+          <NotificationCenter />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
