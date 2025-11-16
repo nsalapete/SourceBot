@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Progress } from "@/components/ui/progress";
 import {
   Play,
   RefreshCw,
@@ -16,11 +18,76 @@ import {
   Sparkles,
   X,
   Send,
+  Clock3,
+  Brain,
+  ListChecks,
+  AlertTriangle,
+  CircleDot,
 } from "lucide-react";
 import { useBackend } from "@/hooks/useBackend";
 import { getVoiceReport } from "@/lib/backendApi";
 
 const VISIBLE_OVERVIEW_DRAFTS = 3;
+
+const ACTIVE_STATUSES = new Set([
+  "planning",
+  "planned",
+  "researching",
+  "awaiting_approval",
+  "drafting",
+]);
+
+const WORKFLOW_PHASES = [
+  {
+    id: "planning",
+    label: "Planning",
+    description: "Drafting the tactical plan with the planner agent.",
+    statuses: ["planning", "planned"],
+    expectedSeconds: 12,
+    icon: Brain,
+  },
+  {
+    id: "researching",
+    label: "Research",
+    description: "Mining inventory and sales data to surface the best suppliers.",
+    statuses: ["researching"],
+    expectedSeconds: 25,
+    icon: Sparkles,
+  },
+  {
+    id: "awaiting_approval",
+    label: "Approval",
+    description: "Waiting for your review to move forward.",
+    statuses: ["awaiting_approval"],
+    expectedSeconds: 0,
+    icon: AlertTriangle,
+    manual: true,
+  },
+  {
+    id: "drafting",
+    label: "Drafting",
+    description: "Writing personalised supplier outreach drafts.",
+    statuses: ["drafting"],
+    expectedSeconds: 18,
+    icon: ListChecks,
+  },
+  {
+    id: "completed",
+    label: "Completed",
+    description: "Workflow finished. You can now review deliverables.",
+    statuses: ["completed"],
+    expectedSeconds: 5,
+    icon: CheckCircle2,
+  },
+];
+
+const formatDuration = (seconds: number) => {
+  if (seconds <= 0) return "0s";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins === 0) return `${secs}s`;
+  return `${mins}m ${secs.toString().padStart(2, "0")}s`;
+};
 
 const escapeHtml = (value: string) =>
   value
@@ -41,6 +108,12 @@ export default function Overview() {
   const [voiceAudioUrl, setVoiceAudioUrl] = useState<string | null>(null);
   const [generatingReport, setGeneratingReport] = useState(false);
   const [showAllDrafts, setShowAllDrafts] = useState(false);
+  const startTimeRef = useRef<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const expectedTotalSeconds = useMemo(
+    () => WORKFLOW_PHASES.reduce((total, phase) => total + (phase.manual ? 0 : phase.expectedSeconds), 0),
+    []
+  );
   
   // Use real backend
   const { state, loading, submitGoal, executeResearch, approveFindings, resetWorkflow, fetchState } = useBackend();
@@ -54,6 +127,40 @@ export default function Overview() {
       return () => clearInterval(interval);
     }
   }, [state, fetchState]);
+
+  useEffect(() => {
+    const status = state?.status;
+
+    if (!status || status === 'idle') {
+      startTimeRef.current = null;
+      setElapsedSeconds(0);
+      return;
+    }
+
+    if (ACTIVE_STATUSES.has(status)) {
+      if (!startTimeRef.current) {
+        startTimeRef.current = Date.now();
+        setElapsedSeconds(0);
+      }
+      return;
+    }
+
+    if (startTimeRef.current) {
+      setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
+    }
+  }, [state?.status]);
+
+  useEffect(() => {
+    if (!state) return;
+    const status = state.status;
+    if (!ACTIVE_STATUSES.has(status) || !startTimeRef.current) return;
+
+    const interval = setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - (startTimeRef.current ?? Date.now())) / 1000));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [state?.status]);
 
   const handleStartTask = async () => {
     if (!goal.trim()) {
@@ -134,6 +241,97 @@ export default function Overview() {
     setShowAllDrafts(false);
   }, [state?.drafts?.emails?.length]);
 
+  const currentPhase = useMemo(() => {
+    if (!state?.status) return null;
+    return WORKFLOW_PHASES.find((phase) => phase.statuses.includes(state.status)) ?? null;
+  }, [state?.status]);
+
+  const currentPhaseIndex = useMemo(() => {
+    if (!state?.status) return -1;
+    return WORKFLOW_PHASES.findIndex((phase) => phase.statuses.includes(state.status));
+  }, [state?.status]);
+
+  const expectedSecondsBeforeCurrent = useMemo(() => {
+    if (currentPhaseIndex <= 0) return 0;
+    return WORKFLOW_PHASES.slice(0, currentPhaseIndex).reduce(
+      (total, phase) => total + (phase.manual ? 0 : phase.expectedSeconds),
+      0
+    );
+  }, [currentPhaseIndex]);
+
+  const baselineSecondsBeforeCurrent = useMemo(() => {
+    if (currentPhaseIndex <= 0) return 0;
+    return WORKFLOW_PHASES.slice(0, currentPhaseIndex).reduce(
+      (total, phase) => total + phase.expectedSeconds,
+      0
+    );
+  }, [currentPhaseIndex]);
+
+  const CurrentPhaseIcon = currentPhase?.icon ?? null;
+
+  const progressPercent = useMemo(() => {
+    if (!state?.status || !currentPhase || !expectedTotalSeconds) return 0;
+    if (state.status === 'idle') return 0;
+    if (state.status === 'completed' || currentPhase.id === 'completed') return 100;
+
+    if (currentPhase.manual) {
+      return Math.min(100, Math.round((expectedSecondsBeforeCurrent / expectedTotalSeconds) * 100));
+    }
+
+    const elapsedForCurrent = Math.max(0, elapsedSeconds - baselineSecondsBeforeCurrent);
+    const cappedElapsed = Math.min(currentPhase.expectedSeconds, elapsedForCurrent);
+    const effectiveElapsed = expectedSecondsBeforeCurrent + cappedElapsed;
+    return Math.min(100, Math.round((effectiveElapsed / expectedTotalSeconds) * 100));
+  }, [state?.status, currentPhase, expectedTotalSeconds, expectedSecondsBeforeCurrent, elapsedSeconds, baselineSecondsBeforeCurrent]);
+
+  const estimatedRemainingSeconds = useMemo(() => {
+    if (!state?.status || !startTimeRef.current) return null;
+    if (!expectedTotalSeconds || expectedTotalSeconds === 0) return null;
+    if (state.status === 'completed' || currentPhase?.manual) return null;
+    const remainingFraction = Math.max(0, 1 - progressPercent / 100);
+    return Math.round(expectedTotalSeconds * remainingFraction);
+  }, [state?.status, progressPercent, expectedTotalSeconds, currentPhase]);
+
+  const planSteps = useMemo(() => {
+    if (!Array.isArray(state?.plan)) return [];
+    return (state?.plan as Array<any>).map((step, index) => {
+      if (typeof step === 'string') {
+        return {
+          number: index + 1,
+          title: step,
+          description: step,
+          rawStatus: undefined,
+        };
+      }
+
+      const record = step ?? {};
+      return {
+        number: record.step_number ?? index + 1,
+        title: record.title ?? record.description ?? `Step ${index + 1}`,
+        description: record.description ?? record.title ?? '',
+        rawStatus: record.status,
+      };
+    });
+  }, [state?.plan]);
+
+  const derivedStepIndex = useMemo(() => {
+    if (!state || planSteps.length === 0) return -1;
+    if (state.status === 'completed') return planSteps.length - 1;
+    if (typeof state.current_step !== 'number') return 0;
+    return Math.min(Math.max(state.current_step, 0), planSteps.length - 1);
+  }, [state, planSteps.length]);
+
+  const isBlocked = state?.status === 'error' || state?.status === 'rejected';
+
+  const getStepVisualState = (index: number) => {
+    if (state?.status === 'completed') return 'completed';
+    if (isBlocked && index === derivedStepIndex) return 'blocked';
+    if (derivedStepIndex === -1) return 'upcoming';
+    if (index < derivedStepIndex) return 'completed';
+    if (index === derivedStepIndex) return ACTIVE_STATUSES.has(state?.status ?? '') ? 'active' : 'pending';
+    return 'upcoming';
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'idle': return 'secondary';
@@ -211,6 +409,73 @@ export default function Overview() {
         </p>
       </div>
 
+        {state && state.status !== 'idle' && (
+          <Card className="border-none bg-gradient-to-r from-primary/10 via-primary/5 to-transparent shadow-sm">
+            <CardContent className="space-y-4 p-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-primary">Workflow Progress</p>
+                  <div className="flex items-center gap-2 text-lg font-semibold">
+                    {CurrentPhaseIcon && (
+                      <CurrentPhaseIcon className="h-5 w-5 text-primary" />
+                    )}
+                    <span>{currentPhase?.label ?? 'Processing'}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {currentPhase?.description ?? 'The agents are processing your request.'}
+                  </p>
+                </div>
+
+                <div className="text-right text-sm text-muted-foreground">
+                  <div className="flex items-center justify-end gap-2 font-medium">
+                    <Clock3 className="h-4 w-4 text-primary" />
+                    <span>Elapsed {formatDuration(elapsedSeconds)}</span>
+                  </div>
+                  {estimatedRemainingSeconds !== null && (
+                    <p className="text-xs">Est. remaining {formatDuration(estimatedRemainingSeconds)}</p>
+                  )}
+                  {currentPhase?.manual && (
+                    <p className="text-xs text-primary/80">Waiting on your approval</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <Progress value={progressPercent} className="h-2 bg-primary/10" />
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                  {WORKFLOW_PHASES.map((phase, index) => {
+                    const phaseState = (() => {
+                      if (state.status === 'completed' && phase.id === 'completed') return 'completed';
+                      if (index < currentPhaseIndex) return 'completed';
+                      if (phase.statuses.includes(state.status)) return phase.manual ? 'manual' : 'active';
+                      if (index === currentPhaseIndex && state.status === 'completed') return 'completed';
+                      return 'upcoming';
+                    })();
+                    const PhaseIcon = phase.icon;
+                    return (
+                      <span
+                        key={phase.id}
+                        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 ${
+                          phaseState === 'completed'
+                            ? 'border-green-500/40 bg-green-500/10 text-green-700'
+                            : phaseState === 'active'
+                            ? 'border-primary/40 bg-primary/10 text-primary'
+                            : phaseState === 'manual'
+                            ? 'border-amber-500/40 bg-amber-500/10 text-amber-700'
+                            : 'border-muted-foreground/20 text-muted-foreground'
+                        }`}
+                      >
+                        <PhaseIcon className="h-3.5 w-3.5" />
+                        {phase.label}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
       {/* Backend Connection Status */}
       {state && (
         <Card>
@@ -246,7 +511,7 @@ export default function Overview() {
         </CardHeader>
         <CardContent className="space-y-4">
           <Textarea
-            placeholder="e.g., Source 10,000 units of electronics components"
+            placeholder="e.g., Source 400 units of Female Hygiene products from Uniphar by 17/11/2025"
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
             rows={3}
@@ -278,18 +543,6 @@ export default function Overview() {
               </Button>
             )}
 
-            {state && (state.status === 'awaiting_approval' || state.status === 'reviewing') && (
-              <>
-                <Button variant="default" onClick={handleApprove} disabled={loading}>
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Approve Findings
-                </Button>
-                <Button variant="outline" onClick={handleReject} disabled={loading}>
-                  Reject & Restart
-                </Button>
-              </>
-            )}
-
             {state && state.status !== 'idle' && (
               <Button variant="outline" onClick={handleReset} disabled={loading}>
                 Reset
@@ -300,37 +553,83 @@ export default function Overview() {
       </Card>
 
       {/* Plan */}
-      {state && state.plan && state.plan.length > 0 && (
+      {planSteps.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>Execution Plan</CardTitle>
+          <CardHeader className="space-y-2">
+            <CardTitle>Planner Reasoning</CardTitle>
+            <CardDescription>
+              Step-by-step plan from the planner agent. Expand a step to review the underlying reasoning.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {(state.plan as Array<string | { title?: string; description?: string; status?: string; step_number?: number }>).map((step, index) => {
-                // Handle both string and object formats from the orchestrator
-                const isObject = typeof step === 'object' && step !== null;
-                const stepRecord = isObject ? step as { title?: string; description?: string; status?: string; step_number?: number } : null;
-                const stepContent = isObject
-                  ? stepRecord?.title || stepRecord?.description || `Step ${index + 1}`
-                  : (step as string);
-                const stepStatus = stepRecord?.status;
-                const stepNumber = stepRecord?.step_number ?? index + 1;
-                
+            <Accordion type="multiple" className="space-y-3">
+              {planSteps.map((step, index) => {
+                const visualState = getStepVisualState(index);
+                const statusLabelMap: Record<string, string> = {
+                  completed: "Completed",
+                  active: "In progress",
+                  upcoming: "Upcoming",
+                  blocked: "Needs attention",
+                  pending: "Pending",
+                };
+                const statusLabel = statusLabelMap[visualState] ?? "Pending";
+                const badgeClass =
+                  visualState === 'completed'
+                    ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/40"
+                    : visualState === 'active'
+                    ? "bg-primary/10 text-primary border-primary/40"
+                    : visualState === 'blocked'
+                    ? "bg-red-500/10 text-red-500 border-red-500/40"
+                    : "bg-muted/40 text-muted-foreground border-muted-foreground/20";
+                const StepIcon =
+                  visualState === 'completed'
+                    ? CheckCircle2
+                    : visualState === 'blocked'
+                    ? AlertTriangle
+                    : visualState === 'active'
+                    ? CircleDot
+                    : Clock3;
+
                 return (
-                  <div key={index} className="p-3 rounded-lg bg-muted/50 flex items-center gap-3">
-                    {stepStatus && (
-                      <Badge variant={stepStatus === 'completed' ? 'default' : 'outline'}>
-                        {stepStatus}
-                      </Badge>
-                    )}
-                    <p className="text-sm font-medium flex-1">
-                      Step {stepNumber}: {stepContent}
-                    </p>
-                  </div>
+                  <AccordionItem
+                    key={`plan-step-${step.number}-${index}`}
+                    value={`plan-step-${step.number}-${index}`}
+                    className="overflow-hidden rounded-2xl border border-border/60 bg-card"
+                  >
+                    <AccordionTrigger className="w-full px-4 py-4 text-left hover:bg-muted/40">
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                          <StepIcon className="h-5 w-5 text-primary" />
+                        </span>
+                        <div className="flex-1 space-y-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                Step {step.number}
+                              </p>
+                              <p className="text-sm font-semibold text-foreground">
+                                {step.title}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className={badgeClass}>
+                              {statusLabel}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {step.description || 'No reasoning provided.'}
+                          </p>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4">
+                      <div className="rounded-xl bg-muted/40 p-4 text-sm leading-relaxed text-muted-foreground">
+                        {step.description || 'No reasoning provided by the planner agent.'}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 );
               })}
-            </div>
+            </Accordion>
           </CardContent>
         </Card>
       )}
@@ -343,6 +642,30 @@ export default function Overview() {
             <CardDescription>AI-powered supplier analysis results</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {(state.status === 'awaiting_approval' || state.status === 'reviewing') && (
+              <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+                <div className="flex flex-col gap-1">
+                  <span className="flex items-center gap-2 text-sm font-semibold text-primary">
+                    <AlertTriangle className="h-4 w-4" />
+                    Review required
+                  </span>
+                  <p className="text-sm text-muted-foreground">
+                    Inspect the findings below, then approve to move forward or request another pass.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={handleApprove} disabled={loading}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Approve Findings
+                  </Button>
+                  <Button variant="outline" onClick={handleReject} disabled={loading}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Run Again
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Statistics Summary */}
             {state.findings.statistics && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

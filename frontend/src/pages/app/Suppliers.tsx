@@ -58,99 +58,115 @@ export interface Supplier {
   ["Refund Value"]?: number | null;
 }
 
+const CSV_URL = "/data/suppliers_sample.csv";
+
+const parseNumber = (v: unknown): number | null => {
+  if (v === null || v === undefined) return null;
+  const str = String(v).trim();
+  if (str === "") return null;
+  const cleaned = str.replace(/[^\d.\-]/g, "");
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : null;
+};
+
+const fmtCurrency = (n: number | null | undefined): string => {
+  if (n === null || n === undefined || Number.isNaN(n)) return "—";
+  return `€${n.toFixed(2)}`;
+};
+
+const fmtQty = (n: number | null | undefined): string => {
+  if (n === null || n === undefined || Number.isNaN(n)) return "—";
+  return Number.isInteger(n) ? String(n) : String(n);
+};
+
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [branchFilter, setBranchFilter] = useState("all");
 
   const [viewMode, setViewMode] = useState<"table" | "cards">("cards");
+  useEffect(() => {
+    let isActive = true;
+    setLoading(true);
+    setLoadError(null);
 
-  const parseNumber = (v: any): number | null => {
-    if (v === null || v === undefined) return null;
-    const str = String(v).trim();
-    if (str === "") return null;
-    const cleaned = str.replace(/[^\d.\-]/g, "");
-    const n = Number(cleaned);
-    return Number.isFinite(n) ? n : null;
-  };
+    // We keep parsing logic in an effect to avoid re-triggering on every render.
+    Papa.parse<Record<string, unknown>>(CSV_URL, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      delimiter: ",",
+      transformHeader: (h: string) =>
+        h
+          ?.trim()
+          .replace(/^\uFEFF/, "")
+          .replace(/\s+/g, " ")
+          .replace(/ $/, "")
+          .replace(/^ /, ""),
+      transform: (value: string) =>
+        typeof value === "string" ? value.trim() : value,
+      complete: (results) => {
+        if (!isActive) return;
 
-  const fmtCurrency = (n: number | null | undefined): string => {
-    if (n === null || n === undefined || Number.isNaN(n)) return "—";
-    return `€${n.toFixed(2)}`;
-  };
+        try {
+          if (results.errors?.length) {
+            console.error("PapaParse errors:", results.errors);
+            setLoadError("Impossible de lire correctement le fichier CSV (format inattendu).");
+          }
 
-  const fmtQty = (n: number | null | undefined): string => {
-    if (n === null || n === undefined || Number.isNaN(n)) return "—";
-    return Number.isInteger(n) ? String(n) : String(n);
-  };
+          const formatted: Supplier[] = results.data.map((row) => ({
+            Product: (row["Product"] as string) ?? "",
+            Packsize: (row["Packsize"] as string) ?? "",
+            ["Headoffice ID"]: parseNumber(row["Headoffice ID"]),
+            ["Branch Name"]: (row["Branch Name"] as string) ?? null,
+            ["Dept Fullname"]: (row["Dept Fullname"] as string) ?? null,
+            ["Group Fullname"]: (row["Group Fullname"] as string) ?? null,
+            ["Trade Price"]: parseNumber(row["Trade Price"]),
+            RRP: parseNumber(row["RRP"]),
+            ["Sale ID"]: parseNumber(row["Sale ID"]),
+            ["Qty Sold"]: parseNumber(row["Qty Sold"]),
+            Turnover: parseNumber(row["Turnover"]),
+            ["Vat Amount"]: parseNumber(row["Vat Amount"]),
+            ["Sale VAT Rate"]: parseNumber(row["Sale VAT Rate"]),
+            ["Turnover ex VAT"]: parseNumber(row["Turnover ex VAT"]),
+            ["Disc Amount"]: parseNumber(row["Disc Amount"]),
+            Profit: parseNumber(row["Profit"]),
+            ["Refund Value"]: parseNumber(row["Refund Value"]),
+          }));
 
-  Papa.parse<any>("/data/Retail/retail_sales_data_01_09_2023_to_31_10_2025_cleaned.csv", {
-  download: true,
-  header: true,
-  skipEmptyLines: true,
+          setSuppliers(formatted);
+          setFilteredSuppliers(formatted);
+          if (formatted.length === 0) {
+            setLoadError("Aucune donnée trouvée dans le CSV des fournisseurs.");
+          }
+        } catch (err) {
+          console.error("Error mapping CSV rows:", err);
+          setSuppliers([]);
+          setFilteredSuppliers([]);
+          setLoadError("Erreur lors de la préparation des données fournisseurs.");
+        } finally {
+          setLoading(false);
+        }
+      },
+      error: (err) => {
+        if (!isActive) return;
+        console.error("PapaParse error:", err);
+        setSuppliers([]);
+        setFilteredSuppliers([]);
+        setLoading(false);
+        setLoadError("Impossible de charger le CSV des fournisseurs.");
+      },
+    });
 
-  // ✅ This is the real delimiter — your file is a TRUE CSV, not TSV
-  delimiter: ",",
-
-  // ✅ Trim headers AND row values (your rows have leading spaces)
-  transformHeader: (h: string) =>
-  h
-    ?.trim()
-    .replace(/^\uFEFF/, "")   // remove BOM
-    .replace(/\s+/g, " ")     // collapse weird whitespace
-    .replace(/ $/, "")        // remove trailing spaces
-    .replace(/^ /, ""),       // remove leading spaces
-
-  transform: (value: string) => (typeof value === "string" ? value.trim() : value),
-
-  complete: (results) => {
-    try {
-      const rows = results.data as any[];
-      console.log("ROWS LOADED:", rows.length);
-    console.log("FIRST ROW:", rows[0]);
-
-      const formatted: Supplier[] = rows.map((row) => ({
-        Product: row["Product"] ?? "",
-        Packsize: row["Packsize"] ?? "",
-        ["Headoffice ID"]: parseNumber(row["Headoffice ID"]),
-        ["Branch Name"]: row["Branch Name"] ?? null,
-        ["Dept Fullname"]: row["Dept Fullname"] ?? null,
-        ["Group Fullname"]: row["Group Fullname"] ?? null,
-        ["Trade Price"]: parseNumber(row["Trade Price"]),
-        RRP: parseNumber(row["RRP"]),
-        ["Sale ID"]: parseNumber(row["Sale ID"]),
-        ["Qty Sold"]: parseNumber(row["Qty Sold"]),
-        Turnover: parseNumber(row["Turnover"]),
-        ["Vat Amount"]: parseNumber(row["Vat Amount"]),
-        ["Sale VAT Rate"]: parseNumber(row["Sale VAT Rate"]),
-        ["Turnover ex VAT"]: parseNumber(row["Turnover ex VAT"]),
-        ["Disc Amount"]: parseNumber(row["Disc Amount"]),
-        Profit: parseNumber(row["Profit"]),
-        ["Refund Value"]: parseNumber(row["Refund Value"]),
-      }));
-
-      setSuppliers(formatted);
-      setFilteredSuppliers(formatted);
-    } catch (err) {
-      console.error("Error mapping CSV rows:", err);
-      setSuppliers([]);
-      setFilteredSuppliers([]);
-    } finally {
-      setLoading(false);
-    }
-  },
-
-  error: (err) => {
-    console.error("PapaParse error:", err);
-    setSuppliers([]);
-    setFilteredSuppliers([]);
-    setLoading(false);
-  },
-});
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   useEffect(() => {
     let data = [...suppliers];
@@ -277,6 +293,15 @@ export default function Suppliers() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
+          ) : loadError ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
+              <p className="text-sm text-muted-foreground max-w-lg">
+                {loadError}
+              </p>
+              <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+                Recharger la page
+              </Button>
+            </div>
           ) : viewMode === "cards" ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredSuppliers.map((s, idx) => (
@@ -371,7 +396,7 @@ export default function Suppliers() {
             </div>
           )}
 
-          {!loading && filteredSuppliers.length === 0 && (
+          {!loading && !loadError && filteredSuppliers.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground">No suppliers match your filters</p>
               <Button
