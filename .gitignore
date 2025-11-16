@@ -1,2 +1,9 @@
 data/Retail/retail_inventory_snapshot_30_10_25.csv
 data/Retail/retail_sales_data_01_09_2023_to_31_10_2025.csv
+venv/
+frontend/node_modules/
+frontend/.vite/
+backend/__pycache__/
+*.pyc
+.DS_Store
+node_modules/
