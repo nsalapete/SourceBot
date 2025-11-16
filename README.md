@@ -77,9 +77,8 @@ npm install
 ### 3. Start the Backend Server
 From project root:
 ```powershell
-npm run start
-# or for development with auto-reload:
-npm run dev
+python ./backend/orchestrator.py
+
 ```
 The server will listen on `http://localhost:5000`.
 
@@ -158,13 +157,22 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
 ### Port Already in Use
 - Change port in `vite.config.ts` (frontend, default 5173) or `server.js` (backend, default 5000).
 
-### API Proxy Not Working
-- Ensure backend is running on `http://localhost:5000`.
-- Check `vite.config.ts` proxy configuration points to correct target.
+### API Set Up
 
-### Docker Issues
-- Docker Desktop must be running to use Docker containers.
-- For local development, install Node.js directly instead of using Docker.
+Create Claude API KEY
+
+Put it in ./env_files/api.env
+
+Run restart_api.sh by double clicking on it
+
+Run in powershell taskkill /F /IM python.exe 2>$null; Start-Sleep -Seconds 2; echo "Restarting backend..."
+
+Start-Process python -ArgumentList "backend\orchestrator.py" -WorkingDirectory "C:\Users\gdest\SourceBot-2" -WindowStyle Hidden; Start-Sleep -Seconds 4; echo "Backend started"
+
+python ./backend/test_api.py #run a small test to ensure connection
+
+
+
 
 ## Environment Variables
 
@@ -200,8 +208,6 @@ NODE_ENV=development
 - User authentication and data persistence.
 - Pagination and sorting in SupplierDatabase component.
 
-## License
-MIT
 
 ## Support
 For issues or questions, refer to the project documentation or contact the development team.
