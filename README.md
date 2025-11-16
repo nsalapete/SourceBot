@@ -201,8 +201,6 @@ NODE_ENV=development
 - **Usage**: Import and render in any page component
 
 ## Future Enhancements
-- Real supplier database integration (CRM sync).
-- Multi-agent AI workflows (planning, research, drafting).
 - Email service integration for automatic outreach.
 - Advanced filtering and analytics dashboard.
 - User authentication and data persistence.
