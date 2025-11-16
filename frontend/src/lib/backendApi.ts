@@ -1,4 +1,4 @@
-// Real Backend API Integration for SourceBot
+// Real Backend API Integration for Serica
 // Connects to Flask orchestrator endpoints
 
 import { API_BASE_URL, apiFetch } from './apiConfig';

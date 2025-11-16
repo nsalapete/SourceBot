@@ -46,7 +46,7 @@ export default function Help() {
   const faqs = [
     {
       question: "Is this connected to real CRMs?",
-      answer: "Not yet. The current build uses mocked data to demonstrate the multi-agent workflow. In production, SourceBot will integrate with your actual CRM system, supplier databases, and email platforms.",
+      answer: "Not yet. The current build uses mocked data to demonstrate the multi-agent workflow. In production, Serica will integrate with your actual CRM system, supplier databases, and email platforms.",
     },
     {
       question: "Where is the multi-agent logic implemented?",
@@ -75,7 +75,7 @@ export default function Help() {
             <div>
               <CardTitle>Help & Walkthrough</CardTitle>
               <CardDescription>
-                Learn how to use SourceBot and understand the demo flow
+                Learn how to use Serica and understand the demo flow
               </CardDescription>
             </div>
           </div>

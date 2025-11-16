@@ -1,4 +1,4 @@
-// Mock API layer for SourceBot
+// Mock API layer for Serica
 // In production, these will be replaced with actual Flask backend endpoints
 
 export interface Task {
@@ -295,7 +295,7 @@ export async function approveSuppliers(taskId: string, supplierIds: string[]): P
     supplierId: supplier.id,
     supplierName: supplier.name,
     subject: `Partnership Inquiry - ${currentTask!.goal.substring(0, 50)}`,
-    body: `Dear ${supplier.name} Team,\n\nWe are reaching out regarding a procurement opportunity that aligns with your capabilities.\n\nProject: ${currentTask!.goal}\n\nKey Requirements:\n- Quantity: As specified in our goal\n- Timeline: Urgent\n- Quality: High standards required\n\nWe noticed your strong track record in ${supplier.category} and would like to discuss how we might work together.\n\nCould you please provide:\n1. Current pricing and MOQ\n2. Lead time estimates\n3. Quality certifications\n\nLooking forward to your response.\n\nBest regards,\nSourceBot Procurement Team`,
+    body: `Dear ${supplier.name} Team,\n\nWe are reaching out regarding a procurement opportunity that aligns with your capabilities.\n\nProject: ${currentTask!.goal}\n\nKey Requirements:\n- Quantity: As specified in our goal\n- Timeline: Urgent\n- Quality: High standards required\n\nWe noticed your strong track record in ${supplier.category} and would like to discuss how we might work together.\n\nCould you please provide:\n1. Current pricing and MOQ\n2. Lead time estimates\n3. Quality certifications\n\nLooking forward to your response.\n\nBest regards,\nSerica Procurement Team`,
     status: 'draft',
   }));
 

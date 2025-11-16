@@ -71,7 +71,7 @@ export default function Landing() {
             </h1>
             
             <p className="text-xl text-muted-foreground max-w-2xl">
-              SourceBot automates supplier research, outreach drafting, and status reporting 
+              Serica automates supplier research, outreach drafting, and status reporting 
               with intelligent agents working in harmony.
             </p>
             

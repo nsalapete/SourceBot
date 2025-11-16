@@ -1,4 +1,4 @@
-// API Configuration for SourceBot
+// API Configuration for Serica
 // Handles connection to Flask backend via local or ngrok URL
 
 const getApiUrl = (): string => {

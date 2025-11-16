@@ -36,7 +36,7 @@ export default function Settings() {
             <Input
               id="team-name"
               placeholder="e.g., Procurement Team"
-              defaultValue="SourceBot Demo Team"
+              defaultValue="Serica Demo Team"
             />
           </div>
           <div className="space-y-2">
@@ -45,7 +45,7 @@ export default function Settings() {
               id="description"
               placeholder="Brief description of your team or organization"
               rows={3}
-              defaultValue="AI-powered procurement team using SourceBot"
+              defaultValue="AI-powered procurement team using Serica"
             />
           </div>
           <Button>Save Changes</Button>
