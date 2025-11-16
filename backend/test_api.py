@@ -20,7 +20,7 @@ def test_health_check():
         print(f"Response: {json.dumps(response.json(), indent=2)}")
         return response.status_code == 200
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f"[ERROR] {str(e)}")
         return False
 
 def test_root_endpoint():
@@ -31,7 +31,7 @@ def test_root_endpoint():
         print(f"Response: {json.dumps(response.json(), indent=2)}")
         return response.status_code == 200
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f"[ERROR] {str(e)}")
         return False
 
 def test_get_state():
@@ -42,7 +42,7 @@ def test_get_state():
         print(f"Response: {json.dumps(response.json(), indent=2)}")
         return response.status_code == 200
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f"[ERROR] {str(e)}")
         return False
 
 def test_submit_goal():
@@ -59,17 +59,17 @@ def test_submit_goal():
         data = response.json()
         
         if response.status_code == 200:
-            print(f"✅ Goal submitted successfully!")
+            print(f"[OK] Goal submitted successfully!")
             print(f"Status: {data['state']['status']}")
             print(f"Plan Steps: {len(data['state']['plan'])}")
             for step in data['state']['plan']:
                 print(f"  - Step {step['step_number']}: {step['title']}")
             return True
         else:
-            print(f"❌ Error: {data.get('error')}")
+            print(f"[ERROR] {data.get('error')}")
             return False
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f"[ERROR] {str(e)}")
         return False
 
 def test_execute_research():
@@ -81,7 +81,7 @@ def test_execute_research():
         data = response.json()
         
         if response.status_code == 200:
-            print(f"✅ Research completed successfully!")
+            print(f"[OK] Research completed successfully!")
             print(f"Status: {data['state']['status']}")
             
             findings = data['state'].get('findings', {})
@@ -91,10 +91,10 @@ def test_execute_research():
                 print(f"Relevant Suppliers: {len(findings.get('relevant_suppliers', []))}")
             return True
         else:
-            print(f"❌ Error: {data.get('error')}")
+            print(f"[ERROR] {data.get('error')}")
             return False
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f"[ERROR] {str(e)}")
         return False
 
 def test_approve_findings():
@@ -110,7 +110,7 @@ def test_approve_findings():
         data = response.json()
         
         if response.status_code == 200:
-            print(f"✅ Findings approved and emails drafted!")
+            print(f"[OK] Findings approved and emails drafted!")
             print(f"Status: {data['state']['status']}")
             
             drafts = data['state'].get('drafts', {})
@@ -121,10 +121,10 @@ def test_approve_findings():
                     print(f"    Subject: {email['subject']}")
             return True
         else:
-            print(f"❌ Error: {data.get('error')}")
+            print(f"[ERROR] {data.get('error')}")
             return False
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f"[ERROR] {str(e)}")
         return False
 
 def test_text_report():
@@ -136,17 +136,17 @@ def test_text_report():
         data = response.json()
         
         if response.status_code == 200:
-            print(f"✅ Text report generated!")
+            print(f"[OK] Text report generated!")
             print(f"\nReport Preview:")
             print("-" * 60)
             print(data.get('report', 'N/A')[:300] + "...")
             print("-" * 60)
             return True
         else:
-            print(f"❌ Error: {data.get('error')}")
+            print(f"[ERROR] {data.get('error')}")
             return False
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f"[ERROR] {str(e)}")
         return False
 
 def test_voice_report():
@@ -158,7 +158,7 @@ def test_voice_report():
         
         if response.status_code == 200:
             audio_size = len(response.content)
-            print(f"✅ Voice report generated!")
+            print(f"[OK] Voice report generated!")
             print(f"Audio file size: {audio_size} bytes ({audio_size/1024:.2f} KB)")
             
             # Save the audio file
@@ -168,13 +168,13 @@ def test_voice_report():
             return True
         else:
             data = response.json()
-            print(f"❌ Error: {data.get('error')}")
+            print(f"[ERROR] {data.get('error')}")
             print(f"Details: {data.get('details')}")
             if 'text_report' in data:
                 print(f"Text fallback available")
             return False
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f"[ERROR] {str(e)}")
         return False
 
 def test_reset():
@@ -186,19 +186,19 @@ def test_reset():
         data = response.json()
         
         if response.status_code == 200:
-            print(f"✅ Workflow reset successfully!")
+            print(f"[OK] Workflow reset successfully!")
             print(f"Status: {data['state']['status']}")
             return True
         else:
-            print(f"❌ Error: {data.get('error')}")
+            print(f"[ERROR] {data.get('error')}")
             return False
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f"[ERROR] {str(e)}")
         return False
 
 def run_all_tests():
     print("\n")
-    print("🤖 SourceBot Backend API Test Suite")
+    print("SourceBot Backend API Test Suite")
     print("=" * 60)
     
     results = {
@@ -209,17 +209,17 @@ def run_all_tests():
     }
     
     # Wait a bit for async processing
-    print("\n⏳ Waiting 2 seconds before research...")
+    print("\n[*] Waiting 2 seconds before research...")
     time.sleep(2)
     
     results["Execute Research (Researcher)"] = test_execute_research()
     
-    print("\n⏳ Waiting 2 seconds before approval...")
+    print("\n[*] Waiting 2 seconds before approval...")
     time.sleep(2)
     
     results["Approve Findings (Communicator)"] = test_approve_findings()
     
-    print("\n⏳ Waiting 2 seconds before reports...")
+    print("\n[*] Waiting 2 seconds before reports...")
     time.sleep(2)
     
     results["Text Report (Reporter)"] = test_text_report()
@@ -232,7 +232,7 @@ def run_all_tests():
     print("=" * 60)
     
     for test_name, passed in results.items():
-        status = "✅ PASS" if passed else "❌ FAIL"
+        status = "[PASS]" if passed else "[FAIL]"
         print(f"{status} - {test_name}")
     
     total = len(results)
@@ -248,8 +248,8 @@ if __name__ == "__main__":
         success = run_all_tests()
         exit(0 if success else 1)
     except KeyboardInterrupt:
-        print("\n\n⚠️  Tests interrupted by user")
+        print("\n\n[WARNING] Tests interrupted by user")
         exit(1)
     except Exception as e:
-        print(f"\n\n❌ Fatal error: {str(e)}")
+        print(f"\n\n[ERROR] Fatal error: {str(e)}")
         exit(1)

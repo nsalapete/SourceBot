@@ -7,6 +7,7 @@ import os
 from dotenv import load_dotenv
 import json
 from io import BytesIO
+import pathlib
 
 # Import agent modules
 from planner import create_plan
@@ -14,9 +15,9 @@ from researcher import analyze_suppliers, load_suppliers_from_file
 from communicator import draft_emails
 from reporter import generate_status_report, generate_voice_report
 
-# Load environment variables
-env_path = os.path.join(os.path.dirname(__file__), '..', 'api.env')
-load_dotenv(env_path)
+# Load environment variables from root directory
+root_dir = pathlib.Path(__file__).parent.parent
+load_dotenv(root_dir / 'api.env')
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend communication
@@ -38,6 +39,17 @@ ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 CLAUDE_MODEL = os.getenv('CLAUDE_MODEL', 'claude-sonnet-4-5-20250929')
 INVENTORY_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'Retail', 'retail_inventory_snapshot_30_10_25_cleaned.csv')
 SALES_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'Retail', 'retail_sales_data_01_09_2023_to_31_10_2025_cleaned.csv')
+
+# Verify API keys are loaded
+if ANTHROPIC_API_KEY:
+    print(f"✓ Anthropic API key loaded (model: {CLAUDE_MODEL})")
+else:
+    print("⚠ WARNING: ANTHROPIC_API_KEY not found in environment!")
+
+if ELEVENLABS_API_KEY:
+    print("✓ ElevenLabs API key loaded")
+else:
+    print("⚠ WARNING: ELEVENLABS_API_KEY not found")
 
 
 @app.route('/', methods=['GET'])
@@ -90,13 +102,17 @@ def submit_goal():
     }
     
     # Call Planner Agent
+    print(f"[DEBUG] Calling planner with goal: {goal}")
     plan_result = create_plan(goal, ANTHROPIC_API_KEY, CLAUDE_MODEL)
+    print(f"[DEBUG] Planner result: {plan_result}")
     
     if not plan_result.get('success'):
         workflow_state["status"] = "error"
+        error_details = plan_result.get('error', 'Unknown error')
+        print(f"[ERROR] Planner failed: {error_details}")
         return jsonify({
             "error": "Failed to create plan",
-            "details": plan_result.get('error')
+            "details": error_details
         }), 500
     
     workflow_state["plan"] = plan_result["plan"]

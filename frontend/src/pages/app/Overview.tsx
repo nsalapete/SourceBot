@@ -4,22 +4,43 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import {
   Play,
   RefreshCw,
   CheckCircle2,
-  Clock,
   Mic,
   Loader2,
+  Copy,
+  MailOpen,
+  Sparkles,
+  X,
+  Send,
 } from "lucide-react";
 import { useBackend } from "@/hooks/useBackend";
 import { getVoiceReport } from "@/lib/backendApi";
+
+const VISIBLE_OVERVIEW_DRAFTS = 3;
+
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+const formatEmailBody = (body: string) => {
+  const escaped = escapeHtml(body);
+  const bolded = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  const highlightedBullets = bolded.replace(/^\s*-\s.*$/gm, (line) => `<span class=\"font-semibold\">${line}</span>`);
+  return highlightedBullets.replace(/\n/g, "<br />");
+};
 
 export default function Overview() {
   const { toast } = useToast();
   const [goal, setGoal] = useState("");
   const [voiceAudioUrl, setVoiceAudioUrl] = useState<string | null>(null);
   const [generatingReport, setGeneratingReport] = useState(false);
+  const [showAllDrafts, setShowAllDrafts] = useState(false);
   
   // Use real backend
   const { state, loading, submitGoal, executeResearch, approveFindings, resetWorkflow, fetchState } = useBackend();
@@ -103,10 +124,15 @@ export default function Overview() {
       await resetWorkflow();
       setGoal("");
       setVoiceAudioUrl(null);
+      setShowAllDrafts(false);
     } catch (error) {
       // Error already handled by useBackend hook
     }
   };
+
+  useEffect(() => {
+    setShowAllDrafts(false);
+  }, [state?.drafts?.emails?.length]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -118,6 +144,61 @@ export default function Overview() {
       case 'completed': return 'default';
       default: return 'outline';
     }
+  };
+
+  const drafts = state?.drafts?.emails ?? [];
+  const displayedDrafts = showAllDrafts ? drafts : drafts.slice(0, VISIBLE_OVERVIEW_DRAFTS);
+
+  const getEmailPreview = (body: string) => {
+    return body
+      .split(/\n+/)
+      .map(line => line.trim())
+      .filter(Boolean)
+      .slice(0, 2)
+      .join(" ")
+      .slice(0, 220)
+      .concat(body.length > 220 ? "…" : "");
+  };
+
+  const handleCopyDraft = async (content: string, supplier: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast({
+        title: "Draft copied",
+        description: `${supplier} email copied to your clipboard.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Copy failed",
+        description: "Could not copy the draft. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSendDraft = async (email: any) => {
+    try {
+      await fetch("http://localhost:5001/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "info",
+          title: "Email Sent",
+          message: `Simulated send to ${email.supplier_name || email.to || "supplier"}`,
+          priority: "medium",
+          requires_approval: false,
+          agent_id: "Communicator",
+          data: { supplier: email.supplier_name, email },
+        }),
+      });
+    } catch (error) {
+      console.error("Notification error", error);
+    }
+
+    toast({
+      title: "Send",
+      description: `Marked email to ${email.supplier_name || email.to} as sent.`,
+    });
   };
 
   return (
@@ -226,10 +307,15 @@ export default function Overview() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {state.plan.map((step, index) => {
-                // Handle both string and object formats
-                const stepContent = typeof step === 'string' ? step : step.title || step.description;
-                const stepStatus = typeof step === 'object' ? step.status : undefined;
+              {(state.plan as Array<string | { title?: string; description?: string; status?: string; step_number?: number }>).map((step, index) => {
+                // Handle both string and object formats from the orchestrator
+                const isObject = typeof step === 'object' && step !== null;
+                const stepRecord = isObject ? step as { title?: string; description?: string; status?: string; step_number?: number } : null;
+                const stepContent = isObject
+                  ? stepRecord?.title || stepRecord?.description || `Step ${index + 1}`
+                  : (step as string);
+                const stepStatus = stepRecord?.status;
+                const stepNumber = stepRecord?.step_number ?? index + 1;
                 
                 return (
                   <div key={index} className="p-3 rounded-lg bg-muted/50 flex items-center gap-3">
@@ -239,7 +325,7 @@ export default function Overview() {
                       </Badge>
                     )}
                     <p className="text-sm font-medium flex-1">
-                      Step {typeof step === 'object' && step.step_number ? step.step_number : index + 1}: {stepContent}
+                      Step {stepNumber}: {stepContent}
                     </p>
                   </div>
                 );
@@ -439,46 +525,128 @@ export default function Overview() {
       )}
 
       {/* Drafts */}
-      {state && state.drafts && state.drafts.emails && (
+      {drafts.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Email Drafts</CardTitle>
-            <CardDescription>
-              {state.drafts.emails.length} automated outreach emails ready for review
-            </CardDescription>
+            <div className="flex flex-col gap-3">
+              <div>
+                <CardTitle>Supplier Outreach Drafts</CardTitle>
+                <CardDescription>
+                  {drafts.length} concise AI-generated emails ready for sharing
+                </CardDescription>
+              </div>
+              {state?.drafts?.summary && (
+                <div className="rounded-2xl border border-slate-200/80 bg-muted/40 p-3 text-sm text-slate-600">
+                  <div className="flex items-start gap-2">
+                    <Sparkles className="mt-0.5 h-4 w-4 text-primary" />
+                    <p className="leading-relaxed">
+                      {state.drafts.summary}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {state.drafts.emails.map((email: any, index: number) => (
-              <div key={index} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h5 className="font-semibold text-base">{email.supplier_name}</h5>
-                      <Badge variant="outline" className="text-xs">
-                        {email.supplier_id}
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <div>
-                        <span className="font-medium">To:</span> {email.to}
+            <div className="space-y-4">
+              {displayedDrafts.map((email: any, index: number) => (
+                <div key={`${email.supplier_id}-${index}`} className="rounded-2xl border border-slate-200/80 bg-card px-4 py-4 shadow-[0_25px_40px_-35px_rgba(15,23,42,0.35)]">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
+                        <span>Supplier</span>
+                        <span className="h-1 w-1 rounded-full bg-slate-200" />
+                        <span>{email.supplier_name || "Unknown"}</span>
                       </div>
-                      <div>
-                        <span className="font-medium">Subject:</span> {email.subject}
+                      <h5 className="text-base font-semibold text-slate-900">{email.subject || "Untitled outreach"}</h5>
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        {email.to && (
+                          <div>
+                            <span className="font-medium">To:</span> {email.to}
+                          </div>
+                        )}
+                        {email.supplier_id && (
+                          <div>
+                            <span className="font-medium">Supplier ID:</span> {email.supplier_id}
+                          </div>
+                        )}
                       </div>
                     </div>
+                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600">
+                      Draft {index + 1}
+                    </Badge>
                   </div>
-                  <Badge className="bg-green-500/10 text-green-700 border-green-500/20">
-                    Draft #{index + 1}
-                  </Badge>
-                </div>
-                
-                <div className="p-3 rounded-md bg-muted/30 border border-dashed">
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                    {email.body}
+
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                    {getEmailPreview(email.body || "")}
                   </p>
+
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          <MailOpen className="mr-2 h-4 w-4" />
+                          View full email
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-3xl w-[min(92vw,900px)] max-h-[85vh] rounded-3xl bg-white p-0 shadow-xl">
+                        <div className="flex flex-col">
+                          <DialogHeader className="space-y-2 px-6 pt-6">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="space-y-1">
+                                <DialogTitle className="text-xl font-semibold text-slate-900">{email.supplier_name}</DialogTitle>
+                                <p className="text-sm text-slate-500">{email.subject}</p>
+                                {email.to && (
+                                  <p className="text-xs text-muted-foreground">To: {email.to}</p>
+                                )}
+                              </div>
+                              <DialogClose className="rounded-full border border-slate-200/90 p-2 text-slate-500 transition hover:border-slate-300 hover:text-slate-700">
+                                <X className="h-4 w-4" />
+                              </DialogClose>
+                            </div>
+                          </DialogHeader>
+                          <div className="mx-6 mb-6 mt-4 max-h-[60vh] overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50/60 px-5 py-4 text-sm leading-relaxed text-slate-600">
+                            <div
+                              className="space-y-2"
+                              dangerouslySetInnerHTML={{ __html: formatEmailBody(email.body || "") }}
+                            />
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+
+                    <Button size="sm" onClick={() => handleCopyDraft(email.body || "", email.supplier_name || "the supplier")}>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy draft
+                    </Button>
+
+                    <Button size="sm" className="bg-primary text-white hover:bg-primary/90" onClick={() => handleSendDraft(email)}>
+                      <Send className="mr-2 h-4 w-4" />
+                      Send
+                    </Button>
+                  </div>
                 </div>
+              ))}
+            </div>
+
+            {drafts.length > displayedDrafts.length && (
+              <div className="flex items-center justify-between rounded-2xl border border-dashed border-slate-200/80 bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                <span>
+                  Showing {displayedDrafts.length} of {drafts.length} drafts
+                </span>
+                <Button size="sm" variant="ghost" onClick={() => setShowAllDrafts(true)}>
+                  Show remaining {drafts.length - displayedDrafts.length}
+                </Button>
               </div>
-            ))}
+            )}
+
+            {showAllDrafts && drafts.length > VISIBLE_OVERVIEW_DRAFTS && (
+              <div className="flex items-center justify-end">
+                <Button size="sm" variant="ghost" onClick={() => setShowAllDrafts(false)}>
+                  Show fewer drafts
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
