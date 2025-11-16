@@ -1,4 +1,4 @@
-# SourceBot - Multi-Agent Supplier Research Dashboard
+# Serica - Multi-Agent Supplier Research Dashboard
 
 A full-stack application that automates supplier research, evaluation, and outreach using multi-agent workflows and AI.
 
