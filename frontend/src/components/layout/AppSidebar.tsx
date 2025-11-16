@@ -5,7 +5,8 @@ import {
   Mail, 
   Activity,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Home
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -37,6 +38,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
+
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -62,6 +64,19 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* ---- Home Button at Bottom ---- */}
+        <div className="mt-auto p-4">
+          <NavLink
+            to="/"
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 
+                       text-white px-3 py-2 rounded-lg transition-colors"
+          >
+            <Home className="h-4 w-4" />
+            {!collapsed && <span>Home</span>}
+          </NavLink>
+        </div>
+
       </SidebarContent>
     </Sidebar>
   );

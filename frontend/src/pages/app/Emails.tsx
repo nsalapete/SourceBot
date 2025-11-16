@@ -38,10 +38,7 @@ We would like to discuss:
 3. Lead times and shipping options
 4. Quality certifications and compliance standards
 
-Please let us know your availability for a call next week to discuss this opportunity in detail.
-
-Best regards,
-Procurement Team`,
+Please let us know your availability for a call next week to discuss this opportunity in detail.`
   },
   {
     id: "2",
@@ -66,10 +63,7 @@ We are particularly interested in:
 - LED components and displays
 - Sensor modules
 
-Looking forward to your response.
-
-Best regards,
-Procurement Team`,
+Looking forward to your response.`
   },
   {
     id: "3",
@@ -80,7 +74,7 @@ Procurement Team`,
     insight: "Ideal for the backorder of sensor modules in Retail program.",
     fullContent: `Dear Northwind Electronics,
 
-We noticed your compliance track record and would like to explore a supply collaboration for certified electronics components. Please share catalog, batch availability, and lead times so we can align on the upcoming project.`,
+We noticed your compliance track record and would like to explore a supply collaboration for certified electronics components. Please share catalog, batch availability, and lead times so we can align on the upcoming project.`
   },
   {
     id: "4",
@@ -91,7 +85,7 @@ We noticed your compliance track record and would like to explore a supply colla
     insight: "Bridges the urgent power-unit shortage highlighted yesterday.",
     fullContent: `Dear Quantum Supplies,
 
-We are issuing an RFQ for precision power components with aggressive lead times. Please confirm your current inventory and pricing for batch orders.`,
+We are issuing an RFQ for precision power components with aggressive lead times. Please confirm your current inventory and pricing for batch orders.`
   },
   {
     id: "5",
@@ -102,7 +96,7 @@ We are issuing an RFQ for precision power components with aggressive lead times.
     insight: "Supports cost optimization scenario recommended by Finance assistant.",
     fullContent: `Dear ElectroLink Group,
 
-Our procurement team is evaluating long-term high-volume contracts for connectors and PCBs. We'd like to understand volume pricing, delivery cadence, and service level agreements.`,
+Our procurement team is evaluating long-term high-volume contracts for connectors and PCBs. We'd like to understand volume pricing, delivery cadence, and service level agreements.`
   },
   {
     id: "6",
@@ -113,7 +107,7 @@ Our procurement team is evaluating long-term high-volume contracts for connector
     insight: "Audit trail aligns with automotive compliance checklist.",
     fullContent: `Dear Atlas Components,
 
-We are preparing for a large semiconductor buy and need certification plus compliance documentation. Please let us know which product lines are ready for immediate delivery.`,
+We are preparing for a large semiconductor buy and need certification plus compliance documentation. Please let us know which product lines are ready for immediate delivery.`
   },
 ];
 
@@ -126,6 +120,20 @@ const statusOrder: Record<string, "draft" | "approved" | "sent"> = {
   "4": "draft",
   "5": "draft",
   "6": "draft",
+};
+
+// Default signature values from Account.tsx
+const defaultSignature = {
+  fullName: "Nicolas Salapete",
+  enterprise: "SERICA",
+  jobTitle: "CEO",
+};
+
+// Append default signature if missing
+const appendSignatureIfMissing = (content: string) => {
+  const signaturePattern = /Best regards,|Sincerely,|Regards,|Thank you,/i;
+  if (signaturePattern.test(content)) return content;
+  return `${content}\n\nBest regards,\n${defaultSignature.fullName}\n${defaultSignature.jobTitle} at ${defaultSignature.enterprise}`;
 };
 
 export default function Emails() {
@@ -188,17 +196,14 @@ export default function Emails() {
   };
 
   const getStatusBadge = (status: "draft" | "approved" | "sent") => {
-    if (status === "sent") {
-      return <Badge className="bg-emerald-500 text-emerald-50">Sent</Badge>;
-    }
-    if (status === "approved") {
-      return <Badge className="bg-teal-500 text-teal-50">Approved</Badge>;
-    }
+    if (status === "sent") return <Badge className="bg-emerald-500 text-emerald-50">Sent</Badge>;
+    if (status === "approved") return <Badge className="bg-teal-500 text-teal-50">Approved</Badge>;
     return <Badge variant="outline">Draft</Badge>;
   };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-6 rounded-3xl border border-slate-200/70 bg-white/95 px-6 py-5 shadow-sm shadow-slate-900/5">
         <div className="flex items-center gap-3">
           <div className="rounded-2xl bg-primary/10 p-3 text-primary">
@@ -216,9 +221,12 @@ export default function Emails() {
         </div>
       </div>
 
+      {/* Email Drafts */}
       <div className="space-y-4">
         {displayedEmails.map(draft => {
           const status = emailStatuses[draft.id];
+          const processedContent = appendSignatureIfMissing(draft.fullContent);
+
           return (
             <div key={draft.id} className="rounded-3xl border border-slate-200/80 bg-white px-6 py-5 shadow-[0_25px_40px_-35px_rgba(15,23,42,0.45)]">
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -258,7 +266,7 @@ export default function Emails() {
                         </DialogClose>
                       </div>
                     </DialogHeader>
-                    <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{draft.fullContent}</div>
+                    <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{processedContent}</div>
                     <div className="mt-6 flex flex-wrap gap-3 border-t border-slate-100 pt-4">
                       {status === "draft" && (
                         <Button size="sm" className="bg-teal-500 text-white hover:bg-teal-600" onClick={() => handleMarkApproved(draft.id)}>
@@ -272,7 +280,7 @@ export default function Emails() {
                           <span className="ml-2">Send mail</span>
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" onClick={() => handleCopy(draft.fullContent, draft.supplier)}>
+                      <Button variant="outline" size="sm" onClick={() => handleCopy(processedContent, draft.supplier)}>
                         <Copy className="h-4 w-4" />
                         <span className="ml-2">Copy text</span>
                       </Button>
@@ -294,7 +302,7 @@ export default function Emails() {
                   </Button>
                 )}
 
-                <Button variant="outline" size="sm" onClick={() => handleCopy(draft.fullContent, draft.supplier)}>
+                <Button variant="outline" size="sm" onClick={() => handleCopy(processedContent, draft.supplier)}>
                   <Copy className="h-4 w-4" />
                   <span className="ml-2">Copy</span>
                 </Button>
