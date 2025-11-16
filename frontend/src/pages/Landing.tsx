@@ -21,28 +21,28 @@ export default function Landing() {
 
   const teamMembers = [
     {
-      name: "Sarah Chen",
-      role: "CEO & Co-Founder",
+      name: "Nicolas Salapete",
+      role: "Professional Stand-up Comedian",
       image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
-      bio: "Sarah brings over 15 years of experience in supply chain management and enterprise software. Before founding SourceBot, she led procurement transformation initiatives at Fortune 500 companies. Her vision is to democratize access to AI-powered sourcing tools for businesses of all sizes."
+      bio: "Nicolas has spent the better part of a decade attempting to make people laugh for a living. When he's not flopping on stage, he usually doesn't get much of a reaction from the audience."
     },
     {
-      name: "Michael Rodriguez",
-      role: "CTO & Co-Founder",
+      name: "Gabriel Destal",
+      role: "Prolific Bird Watcher",
       image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
-      bio: "Michael is a seasoned AI engineer with a passion for multi-agent systems. He previously worked at leading AI research labs and has published numerous papers on autonomous agent collaboration. He architected the core AI infrastructure powering SourceBot's intelligent agents."
+      bio: "Gabriel has identified a whopping 0 bird species in his lifetime. His dedication knows no limits though he does seem to have trouble really spotting them."
     },
     {
-      name: "Emily Thompson",
-      role: "Head of AI Research",
+      name: "Charles Montluc",
+      role: "Food Enthusiast",
       image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
-      bio: "Emily holds a PhD in Machine Learning from MIT and specializes in natural language processing and agent coordination. She leads our research team in developing cutting-edge algorithms that make our AI agents more intelligent and efficient with every iteration."
+      bio: "Charles recently earned a PhD in food discovery from the University of Gastronomic Sciences. His research mainly focuses on finding what he should eat for dinner each night."
     },
     {
-      name: "David Park",
-      role: "VP of Product",
+      name: "Augustin Vlandas",
+      role: "Professional Sleeper",
       image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
-      bio: "David has spent the last decade building enterprise SaaS products that solve real business problems. His deep understanding of procurement workflows ensures SourceBot delivers tangible value to procurement teams while maintaining an intuitive user experience."
+      bio: "Augusting has spent the last 5 years perfecting the art of all-nighters. And when he actually does sleep, he probably won't wake up before 6pm."
     }
   ];
 
