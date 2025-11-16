@@ -11,9 +11,11 @@ import Tasks from "@/pages/app/Tasks";
 import Suppliers from "@/pages/app/Suppliers";
 import Emails from "@/pages/app/Emails";
 import Agents from "@/pages/app/Agents";
+import Account from "@/pages/app/Account";
 import Settings from "@/pages/app/Settings";
 import Help from "@/pages/app/Help";
 import NotFound from "@/pages/NotFound";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,6 +74,7 @@ const App = () => (
               <Route path="suppliers" element={<Suppliers />} />
               <Route path="emails" element={<Emails />} />
               <Route path="agents" element={<Agents />} />
+              <Route path="/app/account" element={<Account />} />
               <Route path="settings" element={<Settings />} />
               <Route path="help" element={<Help />} />
             </Route>

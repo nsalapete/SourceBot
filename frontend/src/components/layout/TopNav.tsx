@@ -1,9 +1,10 @@
-import { Bot, User, Settings, LogOut } from "lucide-react";
+import { Bot, User, Settings, LogOut, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import Account from "@/pages/app/Account";
 
 export function TopNav() {
   const navigate = useNavigate();
@@ -28,7 +29,10 @@ export function TopNav() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => navigate("/app/account")}>
+                <UserCircle className="mr-2 h-4 w-4" />
+                My Account
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate("/app/settings")}>
                 <Settings className="mr-2 h-4 w-4" />
