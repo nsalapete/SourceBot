@@ -309,6 +309,48 @@ def reset_workflow():
     return jsonify({"message": "Workflow reset", "state": workflow_state})
 
 
+@app.route('/api/suppliers', methods=['GET'])
+def get_suppliers():
+    """
+    Get all suppliers from the loaded data
+    Returns supplier database for CRM visualization
+    """
+    try:
+        import pandas as pd
+        
+        # Load inventory CSV
+        inventory_df = pd.read_csv(INVENTORY_FILE)
+        
+        # Get unique suppliers/products
+        suppliers = []
+        
+        # Convert dataframe to list of dicts with real column names
+        for idx, row in inventory_df.iterrows():
+            supplier_dict = {
+                "id": f"{row.get('Product', 'unknown')}-{idx}",
+                "Product": row.get('Product', 'Unknown'),
+                "Packsize": row.get('Packsize', ''),
+                "Headoffice_ID": row.get('Headoffice ID', ''),
+                "Barcode": row.get('Barcode', ''),
+                "OrderList": row.get('OrderList', ''),
+                "Case_Size": row.get('Case Size', ''),
+                "Trade_Price": float(row.get('Trade Price', 0)) if pd.notna(row.get('Trade Price')) else 0,
+                "RRP": float(row.get('RRP', 0)) if pd.notna(row.get('RRP')) else 0,
+                "Dept_Fullname": row.get('Dept Fullname', ''),
+                "Group_Fullname": row.get('Group Fullname', ''),
+                "Branch_Name": row.get('Branch Name', ''),
+                "Branch_Stock_Level": float(row.get('Branch Stock Level', 0)) if pd.notna(row.get('Branch Stock Level')) else 0,
+            }
+            suppliers.append(supplier_dict)
+        
+        return jsonify(suppliers)
+    except Exception as e:
+        print(f"Error loading suppliers: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == '__main__':
     # Verify API keys are loaded
     if not ANTHROPIC_API_KEY:

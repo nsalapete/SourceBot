@@ -22,17 +22,19 @@ export interface Step {
 
 export interface Supplier {
   id: string;
-  name: string;
-  category: string;
-  country: string;
-  rating: number;
-  moq: string;
-  leadTime: string;
-  matchScore: number;
-  email: string;
-  description: string;
-  capabilities: string[];
-  approved: boolean;
+  Product: string;
+  Packsize: string;
+  Headoffice_ID: string;
+  Barcode: string;
+  OrderList: string;
+  Case_Size: string;
+  Trade_Price: number;
+  RRP: number;
+  Dept_Fullname: string;
+  Group_Fullname: string;
+  Branch_Name: string;
+  Branch_Stock_Level: number;
+  approved?: boolean;
 }
 
 export interface EmailDraft {
@@ -325,8 +327,19 @@ export async function approveSuppliers(taskId: string, supplierIds: string[]): P
  * Backend endpoint: GET /api/suppliers
  */
 export async function getAllSuppliers(): Promise<Supplier[]> {
-  await delay(500);
-  return mockSuppliers.map(s => ({ ...s }));
+  try {
+    const response = await fetch('http://localhost:5000/api/suppliers');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch suppliers: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching suppliers from backend:', error);
+    // Fallback to mock data if backend is unavailable
+    await delay(500);
+    return mockSuppliers.map(s => ({ ...s }));
+  }
 }
 
 /**

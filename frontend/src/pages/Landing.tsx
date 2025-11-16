@@ -8,6 +8,7 @@ import { Bot, Search, Mail, FileText, ArrowRight, Sparkles, Zap, Target, LineCha
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import SericaLogo from "@/components/SericaLogo";
 export default function Landing() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -56,6 +57,11 @@ export default function Landing() {
   };
 
   return <div className="min-h-screen">
+      {/* Logo Header with Background */}
+      <div className="fixed top-0 left-0 z-50 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-br-3xl shadow-lg" style={{ width: "160px", height: "160px" }}>
+        <SericaLogo size={100} />
+      </div>
+
       {/* Hero Section */}
       <section className="gradient-hero py-20 px-6">
         <div className="container mx-auto max-w-6xl">
